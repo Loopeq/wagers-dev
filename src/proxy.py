@@ -38,7 +38,10 @@ class ProxyManager:
                                    proxy.port)
 
     def update(self):
-        self._current_id += 1
+        if self._current_id == len(self._proxy_list)-1:
+            self._current_id = 0
+        else:
+            self._current_id += 1
 
 
 proxy_manager = ProxyManager()
