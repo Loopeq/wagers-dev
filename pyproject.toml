@@ -15,7 +15,11 @@ fake-useragent = "^1.5.1"
 aiohttp = "^3.10.5"
 aiocache = "^0.12.2"
 apscheduler = "^3.10.4"
+sqlalchemy = "^2.0.32"
 
+
+[tool.poetry.group.dev.dependencies]
+openpyxl = "^3.1.5"
 
 [build-system]
 requires = ["poetry-core"]

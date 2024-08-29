@@ -1,3 +1,4 @@
+import aiohttp
 from webshare import ApiClient
 
 from src.settings import settings as conf
@@ -42,6 +43,3 @@ class ProxyManager:
             self._current_id = 0
         else:
             self._current_id += 1
-
-
-proxy_manager = ProxyManager()
