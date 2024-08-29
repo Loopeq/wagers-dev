@@ -1,17 +1,15 @@
 import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from straight import save as straight_save
 
 
-async def download(match_id):
-    await straight_save(match_id)
+async def download():
+    pass
 
 
-async def run_downloader():
-    match_id = 1595892404
+async def run_downloader(hours: int = 1):
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(download, 'interval', minutes=5, max_instances=10, args=(match_id, ))
 
+    scheduler.add_job(download, 'interval', minutes=hours)
     scheduler.start()
 
     while True:
