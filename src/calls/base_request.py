@@ -5,6 +5,8 @@ from typing import Any, List
 import aiohttp
 from aiohttp import ContentTypeError, ClientError
 from asyncio import TimeoutError
+
+from src.calls.logs import logger
 from src.proxy import ProxyManager, NoValidProxyError
 from pydantic import BaseModel
 
@@ -31,6 +33,9 @@ async def get_request(url: str, headers: dict, timeout: float = 1.5,
     pm = ProxyManager()
 
     async with aiohttp.ClientSession() as session:
+
+        logger.info(msg=f'Make request from {url}')
+
         while True:
             _errors = []
             trace = {'proxy': pm.proxy, 'url': url}
@@ -48,6 +53,7 @@ async def get_request(url: str, headers: dict, timeout: float = 1.5,
                     finally:
                         pm.update()
                         if data:
+                            logger.info(f'Return response for url: {url}')
                             return Response(status=Status.ACCEPT, data=data, headers=resp.headers, errors=_errors)
 
             except TimeoutError as error:

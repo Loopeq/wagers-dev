@@ -9,3 +9,8 @@ H2 = Font(
     name='Roboto',
     size=18
 )
+
+H3 = Font(
+    name='Roboto',
+    size=16
+)

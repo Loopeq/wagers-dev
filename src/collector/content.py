@@ -1,12 +1,15 @@
-from src.utils.common import calc_coeff, gmt_to_msc
+import json
+from pathlib import Path
+
+from src.utils.common import calc_coeff
 
 
-async def collect_straight_content(data: list[dict], header: dict):
+async def collect_straight_content(data: list[dict], header: dict) -> dict:
 
     result = []
+    response_date = header.get('Date')
     for content in data:
 
-        response_date = gmt_to_msc(header.get('Date'))
         w_type = content['type']
         status = content['status']
         period = content['period']
@@ -20,8 +23,19 @@ async def collect_straight_content(data: list[dict], header: dict):
             total_tmp.append({'design': design, 'points': points, 'coeff': coeff})
 
         info = {'w_type': w_type, 'status': status, 'period': period,
-                'price': total_tmp, 'response_date': response_date}
+                'price': total_tmp}
         result.append(info)
-    return result
+    return {'content': result, 'response_date': response_date}
+
+
+async def save_straight_content(data: dict, match_dir: Path):
+    content_file = match_dir / f'{data["response_date"]}.json'
+
+    if content_file.exists():
+        return
+
+    with open(content_file, 'w') as file:
+        json.dump(data, file)
+
 
 
