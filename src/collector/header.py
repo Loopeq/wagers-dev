@@ -1,17 +1,16 @@
 import json
 from pathlib import Path
 
+from src.utils.common import gmt_to_msc
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = BASE_DIR / 'data'
 
 
 async def collect_match_headers(data: list[dict]) -> list[dict]:
-
     headers = []
 
     for event in data:
-
         match_id = event['id']
         start_time = event['startTime']
         league = event['league']
@@ -38,16 +37,18 @@ async def collect_match_headers(data: list[dict]) -> list[dict]:
     return headers
 
 
-def save_match_header(header: dict):
+def save_match_header(header: dict) -> Path:
+    """Return match dir"""
     sport_dir = DATA_DIR / header['sport_name'].lower()
     sport_dir.mkdir(exist_ok=True)
     match_dir = sport_dir / str(header['match_id'])
     match_dir.mkdir(exist_ok=True)
 
     header_file = match_dir / 'head.json'
-
     if header_file.exists():
-        return
+        return match_dir
 
     with open(header_file, 'w') as file:
         json.dump(header, file)
+
+        return match_dir
