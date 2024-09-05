@@ -1,9 +1,11 @@
 import asyncio
 import enum
 from typing import Any, List
-
+from fake_useragent import UserAgent
 import aiohttp
-from aiohttp import ContentTypeError, ClientError
+from aiohttp import ClientTimeout
+from aiohttp import ContentTypeError, ClientError, ClientResponse
+from requests import ConnectionError
 from asyncio import TimeoutError
 
 from src.calls.logs import logger
@@ -23,49 +25,31 @@ class Error(BaseModel):
 
 class Response(BaseModel):
     status: Status
-    data: Any
+    data: Any = []
     headers: Any = {}
-    errors: List[Error] = []
 
 
-async def get_request(url: str, headers: dict, timeout: float = 1.5,
-                      between_timeout: float = 1.0) -> Response:
+async def get_request(url: str, headers: dict, timeout: float = 5.0) -> Response:
     pm = ProxyManager()
-
     async with aiohttp.ClientSession() as session:
-
-        logger.info(msg=f'Make request from {url}')
-
+        logger.info(msg=f'Make request for {url}')
         while True:
-            _errors = []
-            trace = {'proxy': pm.proxy, 'url': url}
             try:
                 async with session.get(url,
                                        headers=headers,
                                        proxy=pm.proxy,
                                        timeout=timeout) as resp:
-                    try:
+                    if resp.status == 200:
+                        logger.info(f'Return response from url: {url}')
                         data = await resp.json()
-                    except ContentTypeError as error:
-                        _errors.append(Error(msg=error.message, kwargs=trace))
-                    except Exception as error:
-                        _errors.append(Error(msg=str(error), kwargs=trace))
-                    finally:
-                        pm.update()
-                        if data:
-                            logger.info(f'Return response for url: {url}')
-                            return Response(status=Status.ACCEPT, data=data, headers=resp.headers, errors=_errors)
 
-            except TimeoutError as error:
-                _errors.append(Error(msg=str(error), kwargs=trace))
-            except ClientError as error:
-                _errors.append(Error(msg=str(error), kwargs=trace))
-            except NoValidProxyError as error:
-                _errors.append(Error(msg=str(error), kwargs=trace))
-                return Response(status=Status.DENIED, data=[], headers=resp.headers, errors=_errors)
-            except Exception as error:
-                _errors.append(Error(msg=str(error), kwargs=trace))
-            finally:
+                        return Response(status=Status.ACCEPT, data=data, headers=resp.headers)
+                    pm.update()
+            except (ContentTypeError, TimeoutError, ClientError):
                 pm.update()
-
-            await asyncio.sleep(between_timeout)
+            except NoValidProxyError as err:
+                logger.error(f'No valid proxy found with err {err}')
+                return Response(status=Status.DENIED, headers=resp.headers)
+            except Exception as err:
+                logger.error(f'Unexpected exception with err {err}')
+                pm.update()

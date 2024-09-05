@@ -1,14 +1,15 @@
 import json
 from pathlib import Path
 from openpyxl import Workbook
-from openpyxl.styles import (Alignment, Font)
+from openpyxl.styles import (Alignment)
 from openpyxl.worksheet.worksheet import Worksheet
 from src.utils.common import iso_to_msc
-from src.xml.charts import create_line_chart
+from src.xml.charter.charts import create_line_chart
 from src.xml.styles import H2, H1
 from components import draw_title
 from openpyxl.cell.text import InlineFont
 from openpyxl.cell.rich_text import TextBlock, CellRichText
+from utils import reforge
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = BASE_DIR / 'data'
@@ -57,45 +58,47 @@ def make_head(ws: Worksheet, file_io):
                       height=20,
                       font=H2,
                       alignment=Alignment(horizontal='center', vertical='center'))
+    return crds
 
 
-def make_content(ws: Worksheet, file_io):
-    obj = json.load(file_io)
-    content = obj['content']
-    print(content)
-    for data in content:
-        if data['w_type'] == "moneyline":
-            ws['A5'] = f'MoneyLine Тайм - {data["period"]}'
-            ws.merge_cells(start_row=5, start_column=1, end_row=6, end_column=5)
-            ws['A5'].font = H2
-            ws['A3'].alignment = Alignment(horizontal='center', vertical='center')
-            for price in data['price']:
-                if price['design'] == 'home':
-                    pass
-                else:
-                    pass
-                print(price)
+def clear_sheet(wb):
+    for sheet_name in wb.sheetnames:
+        sheet = wb[sheet_name]
+        wb.remove(sheet)
 
 
 def create():
     wb = Workbook()
-    ws = wb.active
 
     for sport_folder in DATA_DIR.iterdir():
         for match in sport_folder.iterdir():
-            for file in match.iterdir():
-                if file.name == 'head.json':
-                    with open(file, 'r') as file_io:
-                        make_head(ws, file_io)
-                    d1 = {'home': {'name': 'Aquila Basket Trento', 'values': [1.96, 1.54, 2.98, 1.67, 2.78, 1.45, 2.08, 1.02, 2.35, 1.13]}, 'away': {'name': 'Scaligera Basket Verona', 'values': [1.85, 2.38, 1.26, 1.50, 1.88, 2.11, 1.63, 2.25, 2.74, 1.90]}}
-                    d2 = {'home': {'name': 'Aquila Basket Trento', 'values': [1.21, 2.03, 1.75, 2.02, 2.66, 1.87, 1.24, 2.44, 1.67, 2.43]}, 'away': {'name': 'Scaligera Basket Verona', 'values': [1.83, 1.56, 2.34, 1.48, 2.22, 1.91, 2.89, 2.35, 1.99, 1.98]}}
-                    h1 = ['20:00', '21:00', '22:00', '23:00', '00:00', '01:00', '02:00', '03:00', '04:00', '05:00']
-                    h2 = ['21:00', '22:00', '23:00', '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00']
-                    create_line_chart(ws=ws, dates=h1, data=d1, crds=(1, 5), title='MoneyLine - Игра')
-                    create_line_chart(ws=ws, dates=h2, data=d2, crds=(1, 28), title='MoneyLine - 1-й Тайм')
+            clear_sheet(wb)
+            try:
 
-                    break
-    wb.save(WORK_DIR / 'sample.xlsx')
+                files = [file for file in match.iterdir()]
+                head = [file for file in files if 'head.json' in str(file)][0]
+
+                with open(head, 'r') as head_io:
+                    head_data = json.load(head_io)
+                    start_time = iso_to_msc(head_data['start_time'])
+                    start_date = start_time.split()[0]
+                    date_path = WORK_DIR / start_date
+                    date_path.mkdir(exist_ok=True)
+
+                content = [file for file in files if 'content.json' in str(file)][0]
+                with open(content, 'r') as content_io:
+                    data, dates = reforge(content_io)
+                    for key in data.keys():
+                        title = str(key).title()
+                        ws = wb.create_sheet(title)
+                        with open(head, 'r') as head_io:
+                            crds = make_head(ws, head_io)
+                        create_line_chart(ws=ws, dates=dates, data=data[key], crds=(crds[0], crds[1]+1), title=title)
+
+                wb.save(date_path / f'{match.name}.xlsx')
+
+            except:
+                continue
 
 
 if __name__ == "__main__":
