@@ -15,10 +15,11 @@ HEADERS = {
 }
 
 
-"""! NEED TO FORMAT"""
+"""! NEED TO FORMAT !"""
 URL = 'https://guest.api.arcadia.pinnacle.com/0.1/matchups/{0}/markets/related/straight'
 
 
 async def get_straight_response(match_id: int):
-    response = await get_request(url=URL.format(match_id), headers=HEADERS, between_timeout=0.5)
+    response = await get_request(url=URL.format(match_id), headers=HEADERS)
     return response
+

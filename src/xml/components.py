@@ -13,18 +13,24 @@ def draw_title(ws: Worksheet,
                height: int = None,
                alignment: Alignment = None,
                sticky: bool = False,
-               sticky_offset: int = 1) -> tuple:
+               sticky_offset: int = 1,
+               background_color: str = None,
+               text_color: str = None) -> tuple:
 
     cell = ws.cell(row=crds[1], column=crds[0], value=title)
+    cell.font = font
     if alignment:
         cell.alignment = alignment
     if sticky:
         letter = get_column_letter(crds[0])
         coord = f'{letter}{crds[1] + sticky_offset}'
         ws.freeze_panes = coord
-    cell.font = font
     if height:
         ws.row_dimensions[crds[1]].height = height
+    if background_color:
+        cell.fill = PatternFill(start_color=background_color, end_color=background_color, fill_type='solid')
+    if text_color:
+        cell.font.color = text_color
     if width:
         ws.merge_cells(start_row=crds[1], start_column=1, end_row=crds[1], end_column=width)
     return crds[0], crds[1] + 1
@@ -50,6 +56,7 @@ def draw_row(ws: Worksheet,
 def fill_cell(ws: Worksheet, crds: tuple, color: str, pattern_type: str = 'solid'):
     cell = f'{get_column_letter(crds[0])}{crds[1]}'
     ws[cell].fill = PatternFill(patternType=pattern_type, fgColor=color)
+    return cell
 
 
 def get_refs(ws: Worksheet, crds: tuple, width: int, height: int) -> Reference:
