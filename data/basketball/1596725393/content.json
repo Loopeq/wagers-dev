@@ -1,0 +1,58 @@
+[
+ {
+  "content": [
+   {
+    "w_type": "moneyline",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": null,
+      "coeff": 1.302
+     },
+     {
+      "design": "away",
+      "points": null,
+      "coeff": 2.94
+     }
+    ]
+   },
+   {
+    "w_type": "spread",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": -6.5,
+      "coeff": 1.893
+     },
+     {
+      "design": "away",
+      "points": 6.5,
+      "coeff": 1.775
+     }
+    ]
+   },
+   {
+    "w_type": "total",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "over",
+      "points": 128.5,
+      "coeff": 1.84
+     },
+     {
+      "design": "under",
+      "points": 128.5,
+      "coeff": 1.826
+     }
+    ]
+   }
+  ],
+  "response_date": "Wed, 11 Sep 2024 15:31:44 GMT"
+ }
+]

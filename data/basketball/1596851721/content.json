@@ -1,0 +1,398 @@
+[
+ {
+  "content": [
+   {
+    "w_type": "moneyline",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": null,
+      "coeff": 2.24
+     },
+     {
+      "design": "away",
+      "points": null,
+      "coeff": 1.599
+     }
+    ]
+   },
+   {
+    "w_type": "spread",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": 3.5,
+      "coeff": 1.855
+     },
+     {
+      "design": "away",
+      "points": -3.5,
+      "coeff": 1.885
+     }
+    ]
+   },
+   {
+    "w_type": "spread",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": 1.0,
+      "coeff": 2.26
+     },
+     {
+      "design": "away",
+      "points": -1.0,
+      "coeff": 1.568
+     }
+    ]
+   },
+   {
+    "w_type": "spread",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": 1.5,
+      "coeff": 2.2
+     },
+     {
+      "design": "away",
+      "points": -1.5,
+      "coeff": 1.602
+     }
+    ]
+   },
+   {
+    "w_type": "spread",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": 2.0,
+      "coeff": 2.1
+     },
+     {
+      "design": "away",
+      "points": -2.0,
+      "coeff": 1.662
+     }
+    ]
+   },
+   {
+    "w_type": "spread",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": 2.5,
+      "coeff": 2.01
+     },
+     {
+      "design": "away",
+      "points": -2.5,
+      "coeff": 1.735
+     }
+    ]
+   },
+   {
+    "w_type": "spread",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": 3.0,
+      "coeff": 1.935
+     },
+     {
+      "design": "away",
+      "points": -3.0,
+      "coeff": 1.806
+     }
+    ]
+   },
+   {
+    "w_type": "spread",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": 4.0,
+      "coeff": 1.769
+     },
+     {
+      "design": "away",
+      "points": -4.0,
+      "coeff": 1.971
+     }
+    ]
+   },
+   {
+    "w_type": "spread",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": 4.5,
+      "coeff": 1.704
+     },
+     {
+      "design": "away",
+      "points": -4.5,
+      "coeff": 2.05
+     }
+    ]
+   },
+   {
+    "w_type": "spread",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": 5.0,
+      "coeff": 1.645
+     },
+     {
+      "design": "away",
+      "points": -5.0,
+      "coeff": 2.13
+     }
+    ]
+   },
+   {
+    "w_type": "spread",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": 5.5,
+      "coeff": 1.595
+     },
+     {
+      "design": "away",
+      "points": -5.5,
+      "coeff": 2.21
+     }
+    ]
+   },
+   {
+    "w_type": "spread",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "home",
+      "points": 6.0,
+      "coeff": 1.552
+     },
+     {
+      "design": "away",
+      "points": -6.0,
+      "coeff": 2.29
+     }
+    ]
+   },
+   {
+    "w_type": "total",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "over",
+      "points": 166.5,
+      "coeff": 1.855
+     },
+     {
+      "design": "under",
+      "points": 166.5,
+      "coeff": 1.885
+     }
+    ]
+   },
+   {
+    "w_type": "total",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "over",
+      "points": 164.0,
+      "coeff": 1.676
+     },
+     {
+      "design": "under",
+      "points": 164.0,
+      "coeff": 2.11
+     }
+    ]
+   },
+   {
+    "w_type": "total",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "over",
+      "points": 164.5,
+      "coeff": 1.709
+     },
+     {
+      "design": "under",
+      "points": 164.5,
+      "coeff": 2.06
+     }
+    ]
+   },
+   {
+    "w_type": "total",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "over",
+      "points": 165.0,
+      "coeff": 1.741
+     },
+     {
+      "design": "under",
+      "points": 165.0,
+      "coeff": 2.01
+     }
+    ]
+   },
+   {
+    "w_type": "total",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "over",
+      "points": 165.5,
+      "coeff": 1.781
+     },
+     {
+      "design": "under",
+      "points": 165.5,
+      "coeff": 1.962
+     }
+    ]
+   },
+   {
+    "w_type": "total",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "over",
+      "points": 166.0,
+      "coeff": 1.82
+     },
+     {
+      "design": "under",
+      "points": 166.0,
+      "coeff": 1.926
+     }
+    ]
+   },
+   {
+    "w_type": "total",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "over",
+      "points": 167.0,
+      "coeff": 1.901
+     },
+     {
+      "design": "under",
+      "points": 167.0,
+      "coeff": 1.84
+     }
+    ]
+   },
+   {
+    "w_type": "total",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "over",
+      "points": 167.5,
+      "coeff": 1.943
+     },
+     {
+      "design": "under",
+      "points": 167.5,
+      "coeff": 1.806
+     }
+    ]
+   },
+   {
+    "w_type": "total",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "over",
+      "points": 168.0,
+      "coeff": 1.98
+     },
+     {
+      "design": "under",
+      "points": 168.0,
+      "coeff": 1.769
+     }
+    ]
+   },
+   {
+    "w_type": "total",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "over",
+      "points": 168.5,
+      "coeff": 2.02
+     },
+     {
+      "design": "under",
+      "points": 168.5,
+      "coeff": 1.735
+     }
+    ]
+   },
+   {
+    "w_type": "total",
+    "status": "open",
+    "period": 0,
+    "price": [
+     {
+      "design": "over",
+      "points": 169.0,
+      "coeff": 2.07
+     },
+     {
+      "design": "under",
+      "points": 169.0,
+      "coeff": 1.704
+     }
+    ]
+   }
+  ],
+  "response_date": "Wed, 11 Sep 2024 15:31:30 GMT"
+ }
+]

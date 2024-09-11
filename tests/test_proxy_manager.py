@@ -1,4 +1,4 @@
-from src.proxy import proxy_manager
+from src.utils.proxy import proxy_manager
 import re
 
 

@@ -1,6 +1,6 @@
 import re
 
-from src.calls.base_request import get_request
+from src.calls.base import get_request
 
 HEADERS = {
     'sec-ch-ua': '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',

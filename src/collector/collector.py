@@ -1,6 +1,6 @@
 import asyncio
 
-from src.calls.base_request import Status
+from src.calls.base import Status
 from src.calls.matchups import get_match_up_response
 from src.calls.straight import get_straight_response
 from src.collector.content import collect_straight_content, save_straight_content

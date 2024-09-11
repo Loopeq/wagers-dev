@@ -1,6 +1,6 @@
-import asyncio
 import json
-from src.calls.base_request import Response, Status, get_request
+import asyncio
+from src.calls.base import Response, Status, get_request
 
 HEADERS = {
     'sec-ch-ua': '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',
@@ -25,3 +25,11 @@ URL = 'https://guest.api.arcadia.pinnacle.com/0.1/sports/{0}/matchups'
 async def get_match_up_response(event_id: int):
     response = await get_request(url=URL.format(event_id), headers=HEADERS)
     return response
+
+
+async def _dev(event_id: int):
+    await get_match_up_response(event_id)
+
+
+if __name__ == '__main__':
+    asyncio.run(_dev(4))
