@@ -31,12 +31,6 @@ class MatchDTO(BaseModel):
     league_id: int
     start_time: datetime.datetime
 
-    @field_validator('start_time')
-    def validate_start_time(cls, value):
-        if value < datetime.datetime.utcnow():
-            raise ValueError('start_time cannot be in the past')
-        return value
-
 
 class MatchRelDTO(MatchDTO):
     league: 'LeagueDTO'
@@ -46,7 +40,7 @@ class MatchRelDTO(MatchDTO):
 class MatchMemberAddDTO(BaseModel):
     match_id: int
     name: str
-    status: MatchResultEnum
+    status: Optional[MatchResultEnum]
     side: MatchSideEnum
 
 
