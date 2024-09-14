@@ -38,8 +38,6 @@ class BetTypeEnum(enum.Enum):
 class MatchResultEnum(enum.Enum):
     win = 'win'
     lose = 'lose'
-    over = 'over'
-    under = 'under'
 
 
 class MatchSideEnum(enum.Enum):
