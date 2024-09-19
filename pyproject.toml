@@ -17,6 +17,9 @@ aiocache = "^0.12.2"
 apscheduler = "^3.10.4"
 sqlalchemy = "^2.0.32"
 asyncpg = "^0.29.0"
+alembic = "^1.13.2"
+fastapi = "^0.114.2"
+uvicorn = {extras = ["standard"], version = "^0.30.6"}
 
 
 [tool.poetry.group.dev.dependencies]

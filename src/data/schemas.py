@@ -2,7 +2,7 @@ import datetime
 from datetime import timedelta
 from typing import Optional
 
-from src.data.models import BetTypeEnum, MatchSideEnum, MatchResultEnum
+from src.data.models import BetTypeEnum, MatchSideEnum, MatchResultEnum, BetStatusEnum, BetValueTypeEnum
 from pydantic import BaseModel, field_validator
 
 
@@ -35,13 +35,19 @@ class MatchDTO(BaseModel):
 class MatchRelDTO(MatchDTO):
     league: 'LeagueDTO'
     match_members: list['MatchMemberDTO']
+    bets: list['BetDTO']
+
+
+class MatchUpcomingDTO(BaseModel):
+    id: int
+    start_time: datetime.datetime
 
 
 class MatchMemberAddDTO(BaseModel):
     match_id: int
     name: str
-    status: Optional[MatchResultEnum]
     side: MatchSideEnum
+    status: Optional[MatchResultEnum] = None
 
 
 class MatchMemberDTO(MatchMemberAddDTO):
@@ -50,14 +56,12 @@ class MatchMemberDTO(MatchMemberAddDTO):
 
 class MatchMemberRelDTO(MatchMemberDTO):
     match: 'MatchDTO'
-    bets: list['BetDTO']
 
 
 class BetAddDTO(BaseModel):
-    match_member_id: int
+    match_id: int
     type: BetTypeEnum
     period: int
-    created_at: datetime.datetime
 
 
 class BetDTO(BetAddDTO):
@@ -65,17 +69,21 @@ class BetDTO(BetAddDTO):
 
 
 class BetRelDTO(BetDTO):
-    match_member: 'MatchMemberDTO'
     bet_values: list['BetValueDTO']
+    match: MatchDTO
 
 
 class BetValueAddDTO(BaseModel):
     bet_id: int
     value: float
-    point: Optional[float]
+    version: Optional[int] = None
+    point: Optional[float] = None
+    status: BetStatusEnum
+    type: BetValueTypeEnum
+    created_at: datetime.datetime
 
 
-class BetValueDTO(BaseModel):
+class BetValueDTO(BetValueAddDTO):
     id: int
 
 
@@ -83,9 +91,3 @@ class BetValueRelDTO(BetValueDTO):
     bet: 'BetDTO'
 
 
-def valid():
-    match = MatchDTO(id=1, league_id=2, start_time=datetime.datetime.utcnow() + timedelta(minutes=30))
-
-
-if __name__ == '__main__':
-    valid()

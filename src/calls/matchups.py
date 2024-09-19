@@ -28,7 +28,7 @@ async def get_match_up_response(event_id: int):
 
 
 async def _dev(event_id: int):
-    await get_match_up_response(event_id)
+    response = await get_match_up_response(event_id)
 
 
 if __name__ == '__main__':

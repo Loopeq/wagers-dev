@@ -14,13 +14,13 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     String,
     Table,
-    text,
+    text, UniqueConstraint,
 )
 from src.data.database import (Base, str_256, str_128, str_64)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
-intpk = Annotated[int, mapped_column(primary_key=True, autoincrement=False)]
+intpk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
 created_at = Annotated[datetime.datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))]
 updated_at = Annotated[datetime.datetime, mapped_column(
         server_default=text("TIMEZONE('utc', now())"),
@@ -43,6 +43,18 @@ class MatchResultEnum(enum.Enum):
 class MatchSideEnum(enum.Enum):
     home = 'home'
     away = 'away'
+
+
+class BetStatusEnum(enum.Enum):
+    open = 'open'
+    closed = 'closed'
+
+
+class BetValueTypeEnum(enum.Enum):
+    home = 'home'
+    away = 'away'
+    over = 'over'
+    under = 'under'
 
 
 class Sport(Base):
@@ -74,6 +86,7 @@ class Match(Base):
 
     league = relationship('League', back_populates='matches')
     match_members = relationship('MatchMember', back_populates='match')
+    bets = relationship('Bet', back_populates='match')
 
 
 class MatchMember(Base):
@@ -82,24 +95,27 @@ class MatchMember(Base):
     id: Mapped[intpk]
     match_id: Mapped[int] = mapped_column(ForeignKey('match.id'), nullable=False)
     name: Mapped[str_64] = mapped_column(nullable=False)
-    status: Mapped[MatchResultEnum] = mapped_column(nullable=False)
+    status: Mapped[MatchResultEnum] = mapped_column(nullable=True)
     side: Mapped[MatchSideEnum] = mapped_column(nullable=False)
-
     match = relationship('Match', back_populates='match_members')
-    bets = relationship('Bet', back_populates='match_member')
+
+    __table_args__ = (
+        UniqueConstraint('match_id', 'side', name='uq_match_combination'),
+    )
 
 
 class Bet(Base):
     __tablename__ = 'bet'
 
     id: Mapped[intpk]
-    match_member_id: Mapped[int] = mapped_column(ForeignKey('match_member.id'), nullable=False)
+    match_id: Mapped[int] = mapped_column(ForeignKey('match.id'), nullable=False)
     type: Mapped[BetTypeEnum] = mapped_column(nullable=False)
     period: Mapped[int] = mapped_column(nullable=False)
-    created_at: Mapped[datetime.datetime] = mapped_column(nullable=False)
-
-    match_member = relationship('MatchMember', back_populates='bets')
     bet_values = relationship('BetValue', back_populates='bet')
+    match = relationship('Match', back_populates='bets')
+    __table_args__ = (
+        UniqueConstraint('match_id', 'type', 'period', name='uq_match_member_combination'),
+    )
 
 
 class BetValue(Base):
@@ -107,9 +123,13 @@ class BetValue(Base):
 
     id: Mapped[intpk]
     bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id'), nullable=False)
+    version: Mapped[int]
     value: Mapped[float] = mapped_column(nullable=False)
-    point: Mapped[float]
+    point: Mapped[float] = mapped_column(nullable=True)
+    status: Mapped[BetStatusEnum] = mapped_column(Enum(BetStatusEnum, name="betstatusenum"), nullable=False,
+                                                  default=BetStatusEnum.open)
+    type: Mapped[BetValueTypeEnum] = mapped_column(Enum(BetValueTypeEnum, name='betvaluetypeenum'), nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(nullable=False)
     bet = relationship('Bet', back_populates='bet_values')
-
 
 
