@@ -4,28 +4,18 @@ import json
 from pathlib import Path
 
 
-def iso_to_msc(iso_date: str):
-    from_iso = datetime.datetime.fromisoformat(iso_date[:-1])
-    utc_zone = pytz.utc
+def iso_to_utc(iso_str: str):
+    return datetime.datetime.fromisoformat(iso_str.replace("Z", ""))
+
+
+def gmt_to_utc(gmt_str: str):
+    return datetime.datetime.strptime(gmt_str, '%a, %d %b %Y %H:%M:%S GMT').replace(tzinfo=None)
+
+
+def utc_to_msc(utc_data: str):
     msc_zone = pytz.timezone('Europe/Moscow')
-
-    from_iso = utc_zone.localize(from_iso)
-    msc_time = from_iso.astimezone(msc_zone)
-    return str(msc_time)[:-6]
-
-
-def gmt_to_msc(gmt_date: str):
-    date_format = "%a, %d %b %Y %H:%M:%S %Z"
-
-    gmt_time = datetime.datetime.strptime(gmt_date, date_format)
-
-    utc_zone = pytz.utc
-    gmt_time = utc_zone.localize(gmt_time)
-
-    msc_zone = pytz.timezone("Europe/Moscow")
-    msc_time = gmt_time.astimezone(msc_zone)
-
-    return str(msc_time)[:-6]
+    msc_time = utc_data.astimezone(msc_zone)
+    return msc_time
 
 
 def calc_coeff(price):

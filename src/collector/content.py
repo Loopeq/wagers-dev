@@ -1,40 +1,44 @@
-import json
-from pathlib import Path
 import asyncio
-from src.utils.common import calc_coeff
-from json.decoder import JSONDecodeError
+import json
+from src.data.crud import MatchOrm, MatchMemberOrm, BetOrm, BetValueOrm
+from src.calls.base import Status
+from src.calls.matchups import get_match_up_response
+from src.calls.straight import get_straight_response
+from src.data.models import BetTypeEnum, BetStatusEnum, BetValueTypeEnum
+from src.data.schemas import BetValueAddDTO, MatchUpcomingDTO
+from src.utils.common import gmt_to_utc, calc_coeff
 
 
-async def collect_straight_content(data: list[dict], header: dict) -> dict:
-    result = []
-    response_date = header.get('Date')
-    for content in data:
-        w_type = content['type']
-        status = content.get('status')
-        period = content.get('period')
-        prices = content['prices']
-        total_tmp = []
-        for price in prices:
-            design = price.get('designation')
-            points = price.get('points')
-            coeff = calc_coeff(price['price'])
-            total_tmp.append({'design': design, 'points': points, 'coeff': coeff})
-        info = {'w_type': w_type, 'status': status, 'period': period,
-                'price': total_tmp}
-        result.append(info)
-    return {'content': result, 'response_date': response_date}
+async def collect_content(matches: List[MatchUpcomingDTO]):
+    for match in matches:
+        content_response = await get_straight_response(match_id=match.id)
+        headers = content_response.headers
+        data = content_response.data
+        response_date = gmt_to_utc(headers.get('Date'))
+        bet_group = []
+        for content in data:
+            w_type = BetTypeEnum[content['type'].lower()]
+            period = content.get('period')
+            match_id = content.get('matchupId')
+
+            bet_id = await BetOrm.get_bet_id_by_(bet_type=w_type, period=period, match_id=match_id)
+            prices = content['prices']
+            status = content.get('status')
+            bet_values = []
+            for price in prices:
+                design = price.get('designation')
+                points = price.get('points')
+                coeff = calc_coeff(price['price'])
+
+                bet_values.append(BetValueAddDTO(bet_id=bet_id,
+                                                 value=coeff,
+                                                 point=points,
+                                                 status=BetStatusEnum[status],
+                                                 created_at=response_date,
+                                                 type=BetValueTypeEnum[design]))
+            bet_group.append(bet_values)
+        await BetValueOrm.insert_bet_values(bet_group)
 
 
-async def save_straight_content(data: dict, match_dir: Path):
-    content_file = match_dir / 'content.json'
-    tmp = []
-    try:
-        tmp = json.load(open(content_file))
-        tmp.append(data)
-    except (JSONDecodeError, FileNotFoundError):
-        tmp = [data]
-    finally:
-        with open(content_file, 'w') as file:
-            json.dump(tmp, file, indent=True, ensure_ascii=False)
-
-
+if __name__ == "__main__":
+    asyncio.run(collect_content())
