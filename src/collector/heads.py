@@ -4,15 +4,18 @@ import json
 from datetime import timedelta
 from pathlib import Path
 
+from src.calls.base import Status
 from src.calls.matchups import get_match_up_response
 from src.data.models import MatchSideEnum, BetTypeEnum
-from src.utils.common import iso_to_utc
-from src.data.crud import SportOrm, LeagueOrm, MatchOrm, MatchMemberOrm, BetOrm, create_tables
+from src.utils.common import iso_to_utc, utc_to_msc
+from src.data.crud import SportOrm, LeagueOrm, MatchOrm, MatchMemberOrm, create_tables
 from src.data.schemas import SportDTO, LeagueDTO, MatchDTO, MatchMemberAddDTO, BetAddDTO
 
 
 async def collect_heads():
     match_ups_response = await get_match_up_response(4)
+    if match_ups_response.status == Status.DENIED:
+        return
     await _collect_heads_data(data=match_ups_response.data)
 
 
@@ -21,12 +24,11 @@ async def _collect_heads_data(data: list[dict]):
         has_live = event.get('hasLive')
         event_type = event.get('type')
         start_time = iso_to_utc(event.get('startTime'))
-        utc_now_time = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0, tzinfo=None)
-        delta = timedelta(days=1)
-        # TODO: DEV
-        if has_live or (start_time < utc_now_time + delta) or event_type != 'matchup':
-            continue
 
+        if has_live or event_type != 'matchup':
+            continue
+        if count == 3:
+            break
         match_id = event.get('id')
         league = event.get('league')
         league_id = league.get('id')
@@ -50,19 +52,10 @@ async def _collect_heads_data(data: list[dict]):
         await MatchMemberOrm.insert_match_member(match_member_home_dto)
         await MatchMemberOrm.insert_match_member(match_member_away_dto)
 
-        periods = event.get('periods')
-        await collect_periods(periods, match_id=match_id)
+
+async def _dev():
+    await collect_heads()
 
 
-async def collect_periods(periods: list[dict], match_id: int) -> None:
-    has_types = ['hasMoneyline', 'hasSpread', 'hasTeamTotal', 'hasTotal']
-    types = {'hasMoneyline': 'moneyline', 'hasSpread': 'spread', 'hasTeamTotal': 'teamtotal', 'hasTotal': 'total'}
-    bets_to_add = []
-    for period in periods:
-        period_count = period.get('period')
-        for w_type in has_types:
-            if period.get(w_type):
-                bet = BetAddDTO(match_id=match_id, type=BetTypeEnum[types[w_type]], period=period_count)
-                bets_to_add.append(bet)
-    await BetOrm.insert_bets(bets_to_add)
-
+if __name__ == "__main__":
+    asyncio.run(_dev())

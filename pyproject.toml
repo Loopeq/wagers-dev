@@ -20,12 +20,19 @@ asyncpg = "^0.29.0"
 alembic = "^1.13.2"
 fastapi = "^0.114.2"
 uvicorn = {extras = ["standard"], version = "^0.30.6"}
+confluent-kafka = "^2.5.3"
+websockets = "^13.1"
 
 
 [tool.poetry.group.dev.dependencies]
 openpyxl = "^3.1.5"
 colorlog = "^6.8.2"
+flake8 = "^7.1.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry.scripts]
+server = 'src.main:main'

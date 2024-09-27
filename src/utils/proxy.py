@@ -3,6 +3,7 @@ from webshare import ApiClient
 from pathlib import Path
 from src.settings import settings as conf
 import asyncio
+import requests
 
 _CLIENT = ApiClient(conf.WEBSHARE_API)
 _PROXIES = _CLIENT.get_proxy_list().get_results()

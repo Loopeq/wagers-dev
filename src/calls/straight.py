@@ -6,7 +6,8 @@ HEADERS = {
     'sec-ch-ua': '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',
     'X-Device-UUID': '6d702fee-ff3e303d-e0986d30-b379cb05',
     'sec-ch-ua-mobile': '?0',
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+    'User-Agent':
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'Referer': 'https://www.pinnacle.com/',
