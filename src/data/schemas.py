@@ -21,21 +21,10 @@ class LeagueDTO(BaseModel):
     name: str
 
 
-class LeagueRelDTO(LeagueDTO):
-    sport: 'SportDTO'
-    matches: list['MatchDTO']
-
-
 class MatchDTO(BaseModel):
     id: int
     league_id: int
     start_time: datetime.datetime
-
-
-class MatchRelDTO(MatchDTO):
-    league: 'LeagueDTO'
-    match_members: list['MatchMemberDTO']
-    bets: list['BetDTO']
 
 
 class MatchUpcomingDTO(BaseModel):
@@ -54,40 +43,21 @@ class MatchMemberDTO(MatchMemberAddDTO):
     id: int
 
 
-class MatchMemberRelDTO(MatchMemberDTO):
-    match: 'MatchDTO'
-
-
 class BetAddDTO(BaseModel):
     match_id: int
+    point: float
+    home_cf: float
+    away_cf: float
     type: BetTypeEnum
     period: int
+    created_at: datetime.datetime
+    version: Optional[int] = None
 
 
 class BetDTO(BetAddDTO):
     id: int
 
 
-class BetRelDTO(BetDTO):
-    bet_values: list['BetValueDTO']
-    match: MatchDTO
-
-
-class BetValueAddDTO(BaseModel):
-    bet_id: int
-    value: float
-    version: Optional[int] = None
-    point: Optional[float] = None
-    status: BetStatusEnum
-    type: BetValueTypeEnum
-    created_at: datetime.datetime
-
-
-class BetValueDTO(BetValueAddDTO):
-    id: int
-
-
-class BetValueRelDTO(BetValueDTO):
-    bet: 'BetDTO'
-
-
+class BetChangeAddDTO(BaseModel):
+    old_bet_id: int
+    new_bet_id: int
