@@ -14,10 +14,10 @@ scheduler = AsyncIOScheduler()
 
 
 async def parse(start: Optional[int] = None, end: Optional[int] = None):
-    logger.info(f'Start collecting above {start} to {end} hours games..')
+    logger.info(f'Start collecting data between {start} and {end}')
     stmd = timedelta(hours=start) if start else None
     edmd = timedelta(hours=end) if end else None
-    # await collect_heads()
+    await collect_heads()
     matches = await MatchOrm.get_upcoming_matches(start_timedelta=stmd,
                                                   end_timedelta=edmd)
     await collect_content(matches)
@@ -26,8 +26,8 @@ async def parse(start: Optional[int] = None, end: Optional[int] = None):
 async def run_parser():
     await create_tables()
     time_stemps = [
-                   # {'s': 1, "e": 3, "m": 3},
-                   # {'s': 0, "e": 1, "m": 5},
+                   {'s': 1, "e": 3, "m": 15},
+                   {'s': 0, "e": 1, "m": 30},
                    {'s': 3, "m": 60}]
     for ts in time_stemps:
         scheduler.add_job(parse, 'interval', minutes=ts['m'], args=[ts.get('s'), ts.get('e')])

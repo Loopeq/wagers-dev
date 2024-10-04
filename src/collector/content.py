@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import json
 import logging
 import random
@@ -14,9 +15,11 @@ from src.data.crud import MatchOrm, UpdateManager
 from src.data.models import BetTypeEnum, BetStatusEnum, BetValueTypeEnum
 from src.data.schemas import MatchUpcomingDTO, BetAddDTO
 from src.utils.common import gmt_to_utc, calc_coeff
+from src.logs import logger
 
 
 async def collect_content(matches: List[MatchUpcomingDTO]):
+    logger.info(f'Collect content for {len(matches)} upcoming matches')
     for match in matches:
 
         content_response = await get_straight_response(match_id=match.id)
@@ -50,13 +53,13 @@ async def collect_content(matches: List[MatchUpcomingDTO]):
                           type=BetTypeEnum[w_type],
                           period=period,
                           created_at=response_date))
-
         await UpdateManager.insert_bets(bets)
 
 
 async def _dev():
-    matches = await MatchOrm.get_upcoming_matches()
-    res = await collect_content(matches=matches)
+    upcoming = await MatchOrm.get_upcoming_matches()
+    for i in [1, 2]:
+        res = await collect_content(matches=upcoming)
 
 
 if __name__ == "__main__":
