@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import math
 from datetime import timedelta
+import random
 
 from typing import List, Optional
 
@@ -115,7 +116,6 @@ class SportOrm:
                 await session.rollback()
             except Exception:
                 await session.rollback()
-                raise
 
 
 class LeagueOrm:
@@ -153,7 +153,11 @@ class UpdateManager:
 
     @staticmethod
     async def insert_bets(bets: List[BetAddDTO]):
-        async with async_session_factory() as session:
+        async with (async_session_factory() as session):
+
+            if not bets:
+                return
+
             match_id = bets[0].match_id
             stmt = await session.execute(
                 select(func.max(Bet.version))
@@ -177,17 +181,24 @@ class UpdateManager:
             session.add_all(bets_orm)
             await session.commit()
 
-            b = aliased(Bet)
+            b_new = aliased(Bet)
+            b_old = aliased(Bet)
 
-            result = await session.execute(select(b.id, Bet.id).join(Bet, and_(
-                Bet.version == version + 1,
-                b.match_id == Bet.match_id,
-                b.period == Bet.period,
-                b.type == Bet.type), isouter=True).filter(and_(b.version == version, func.abs(b.point - Bet.point) >= 2)))
+            result = await session.execute(select(b_old.id, b_new.id)
+                                           .select_from(b_old)
+                                           .join(b_new, and_(b_old.version == version,
+                                                             b_old.type == b_new.type,
+                                                             b_old.period == b_new.period))
+                                           .filter(and_(func.abs(b_old.point - b_new.point) >= 2,
+                                                        b_new.version == version + 1,
+                                                        b_old.match_id == match_id,
+                                                        b_new.match_id == match_id)))
+
             not_equals = result.fetchall()
+
             if not_equals:
                 bet_changes = [BetChange(old_bet_id=nq[0], new_bet_id=nq[1]) for nq in not_equals]
-                await session.add_all(bet_changes)
+                session.add_all(bet_changes)
 
             await session.commit()
 

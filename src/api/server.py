@@ -1,15 +1,17 @@
 import asyncio
 
 import uvicorn
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, Depends, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-from typing import List
+from typing import List, Optional
 import json
 
 from sqlalchemy import event
 from starlette.middleware.cors import CORSMiddleware  # NEW
 
 from src.api.api_methods import ApiOrm
+
+from src.api.schemas import FilterResponse, FilterRequest, filters
 from src.data.crud import UpdateManager
 
 app = FastAPI()
@@ -23,52 +25,59 @@ app.add_middleware(
 )
 
 
-# class ConnectionManager:
-#     def __init__(self):
-#         self.active_connections: list[WebSocket] = []
-#
-#     async def connect(self, websocket: WebSocket):
-#         await websocket.accept()
-#         self.active_connections.append(websocket)
-#
-#     def disconnect(self, websocket: WebSocket):
-#         self.active_connections.remove(websocket)
-#
-#     @staticmethod
-#     async def send_personal_message(message: str, websocket: WebSocket):
-#         await websocket.send_text(message)
-#
-#     async def broadcast(self, message: str):
-#         for connection in self.active_connections:
-#             await connection.send_text(message)
-#
-#
-# manager = ConnectionManager()
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    @staticmethod
+    async def send_personal_message(message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def broadcast_message(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+    async def broadcast_json(self, jsn: dict):
+        for connection in self.active_connections:
+            await connection.send_json(jsn)
+
+
+manager = ConnectionManager()
 
 
 @app.get('/')
-async def get_point_change_base(hours: int):
-    changes = await ApiOrm.get_point_changes()
-    changes_serial = [{'match_id': change[0],
-                       'old_point': change[1],
-                       'new_point': change[2],
-                       'period': change[3],
-                       'bet_type': change[4],
-                       'start_time': change[5],
-                       'created_at': change[6],
-                       'home_name': change[7],
-                       'home_id': change[8],
-                       'away_name': change[9],
-                       'away_id': change[10],
-                       'league_name': change[11]
-                       } for change in changes]
-    return changes_serial
+async def get_match_on_change_base(filters: FilterRequest = Depends()):
+    matches = await ApiOrm.get_match_with_change(filters=filters)
+    return matches
+
+
+@app.get('/filters', response_model=FilterResponse)
+async def get_filters():
+    return filters
 
 
 @app.get('/{match_id}')
 async def get_point_change_info(match_id: int):
-    changes = await UpdateManager.get_point_change_info(match_id)
+    changes = await ApiOrm.get_point_change(match_id=match_id)
     return changes
+
+
+@app.get('/ws')
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+
+    try:
+        while True:
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 
 async def run_server():

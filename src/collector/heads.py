@@ -10,6 +10,7 @@ from src.data.models import MatchSideEnum, BetTypeEnum
 from src.utils.common import iso_to_utc, utc_to_msc
 from src.data.crud import SportOrm, LeagueOrm, MatchOrm, MatchMemberOrm, create_tables
 from src.data.schemas import SportDTO, LeagueDTO, MatchDTO, MatchMemberAddDTO, BetAddDTO
+from src.logs import logger
 
 
 async def collect_heads():
@@ -20,15 +21,15 @@ async def collect_heads():
 
 
 async def _collect_heads_data(data: list[dict]):
+    logger.info(f'Collect heads for {len(data)} events')
     for event in data:
         has_live = event.get('hasLive')
         event_type = event.get('type')
         start_time = iso_to_utc(event.get('startTime'))
-
-        if has_live or event_type != 'matchup':
+        now_date = datetime.datetime.utcnow()
+        if has_live or event_type != 'matchup' or now_date > start_time:
             continue
-        if count == 3:
-            break
+
         match_id = event.get('id')
         league = event.get('league')
         league_id = league.get('id')
