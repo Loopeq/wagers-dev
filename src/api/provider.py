@@ -17,14 +17,28 @@ import json
 class ApiOrm:
 
     @staticmethod
-    async def get_match_history_by_team_name(team_name: str):
+    async def get_match_history_by_team_name(team_name: str, current_match_id: int):
         async with async_session_factory() as session:
             mm = aliased(MatchMember)
-            query = select(mm.match_id).select_from(mm).filter(mm.name == team_name)
+            query = select(mm.match_id).select_from(mm).filter(mm.name == team_name,
+                                                               mm.match_id != current_match_id)
             match_ids = await session.execute(query)
 
+            mm_home = aliased(MatchMember)
+            mm_away = aliased(MatchMember)
+            m = aliased(Match)
+
+            history = []
             for match_id in match_ids.fetchall():
-                change = await ApiOrm.get_point_change(match_id[0])
+                query = select(m.id, mm_home.name, mm_away.name, m.start_time) \
+                    .select_from(m).join(mm_home, and_(mm_home.match_id == match_id[0], mm_home.side == 'home')) \
+                    .join(mm_away, and_(mm_away.match_id == match_id[0], mm_away.side == 'away')) \
+                    .filter(m.id == match_id[0])
+                result = await session.execute(query)
+                info = result.fetchone()
+                info = {'match_id': info[0], 'home_name': info[1], 'away_name': info[2], 'start_time': info[3]}
+                history.append(info)
+            return history
 
     @staticmethod
     async def get_point_change(match_id: int):
@@ -110,7 +124,7 @@ class ApiOrm:
                                    subquery.c.change_count, subquery.c.last_change_time)
 
             if filters.filter == ValueFilterType.match_start_time:
-                query = query.order_by(m.start_time.desc())
+                query = query.order_by(m.start_time.asc())
             elif filters.filter == ValueFilterType.last_change_time:
                 query = query.order_by(subquery.c.last_change_time.desc().nulls_last())
             elif filters.filter == ValueFilterType.count_of_changes:
@@ -133,7 +147,7 @@ class ApiOrm:
 
 
 async def _dev():
-    res = await ApiOrm.get_match_history_by_team_name(team_name='Explosivas de Moca')
+    res = await ApiOrm.get_match_history_by_team_name('Kepler', 123)
     print(res)
 
 

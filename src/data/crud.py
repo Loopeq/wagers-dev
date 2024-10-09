@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session
 
 async def create_tables():
     async with async_engine.begin() as conn:
-        # await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
 
@@ -46,15 +46,6 @@ class MatchOrm:
                 if 'foreign key constraint' in str(e.orig):
                     raise ValueError(f'League with id {match.league_id} does not exist.')
                 await session.rollback()
-
-    @staticmethod
-    async def get_match_by_id(id: int) -> MatchDTO | None:
-        async with async_session_factory() as session:
-            match = await session.get(Match, id)
-            if not match:
-                return None
-            match_dto = MatchDTO.model_validate(match, from_attributes=True)
-            return match_dto
 
     @staticmethod
     async def get_upcoming_matches(start_timedelta: Optional[timedelta] = None,
@@ -92,17 +83,6 @@ class MatchMemberOrm:
                 await session.rollback()
                 raise
 
-    @staticmethod
-    async def get_match_members_by_match_id(match_id: int,
-                                            relation: bool = False) -> List[MatchMemberDTO]:
-        async with async_session_factory() as session:
-            query = select(MatchMember).where(MatchMember.match_id == match_id)
-            result = await session.execute(query)
-            match_member = result.scalars().fetchall()
-            model_to_validate = MatchMemberRelDTO if relation else MatchMemberDTO
-            match_member_dto = [model_to_validate.model_validate(row, from_attributes=True) for row in match_member]
-            return match_member_dto
-
 
 class SportOrm:
     @staticmethod
@@ -132,27 +112,11 @@ class LeagueOrm:
                 if 'foreign key constraint' in str(e.orig):
                     raise ValueError(f'Sport with id {league.sport_id} does not exist.')
 
-    @staticmethod
-    async def get_leagues() -> List[LeagueDTO]:
-        async with async_session_factory() as session:
-            leagues = await session.get(League)
-            leagues_dto = [LeagueDTO.model_validate(row, from_attributes=True) for row in leagues]
-            return leagues_dto
-
-    @staticmethod
-    async def get_league_by_id(id: int) -> LeagueDTO | None:
-        async with async_session_factory() as session:
-            league = await session.get(League, id)
-            if not league:
-                return None
-            league_dto = LeagueDTO.model_validate(league, from_attributes=True)
-            return league_dto
-
 
 class UpdateManager:
 
     @staticmethod
-    async def insert_bets(bets: List[BetAddDTO]):
+    async def insert_bets(bets: List[BetAddDTO], point_delay):
         async with (async_session_factory() as session):
 
             if not bets:
@@ -184,16 +148,23 @@ class UpdateManager:
             b_new = aliased(Bet)
             b_old = aliased(Bet)
 
-            result = await session.execute(select(b_old.id, b_new.id)
-                                           .select_from(b_old)
-                                           .join(b_new, and_(b_old.version == version,
-                                                             b_old.type == b_new.type,
-                                                             b_old.period == b_new.period))
-                                           .filter(and_(func.abs(b_old.point - b_new.point) >= 2,
-                                                        b_new.version == version + 1,
-                                                        b_old.match_id == match_id,
-                                                        b_new.match_id == match_id)))
+            query = (select(b_old.id, b_new.id)
+                     .select_from(b_old)
+                     .join(b_new, and_(b_old.version == version,
+                                       b_old.type == b_new.type,
+                                       b_old.period == b_new.period)))
+            query = query.filter(
+                b_new.version == version + 1,
+                b_old.match_id == match_id,
+                b_new.match_id == match_id
+            )
 
+            if point_delay != 0:
+                query = query.filter(func.abs(b_old.point - b_new.point) >= point_delay)
+            else:
+                query = query.filter(func.abs(b_old.point - b_new.point) != point_delay)
+
+            result = await session.execute(query)
             not_equals = result.fetchall()
 
             if not_equals:
@@ -201,11 +172,3 @@ class UpdateManager:
                 session.add_all(bet_changes)
 
             await session.commit()
-
-
-async def _dev():
-    print(res)
-
-
-if __name__ == "__main__":
-    asyncio.run(_dev())

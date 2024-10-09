@@ -3,9 +3,8 @@ from typing import Any
 import aiohttp
 from aiohttp import ContentTypeError, ClientError
 from asyncio import TimeoutError
-from src.utils.proxy import ProxyManager, NoValidProxyError
+from src.parser.utils.proxy import ProxyManager, NoValidProxyError
 from pydantic import BaseModel
-import json
 
 
 class Status(enum.Enum):
