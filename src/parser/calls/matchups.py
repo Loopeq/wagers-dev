@@ -1,6 +1,5 @@
-import json
 import asyncio
-from src.calls.base import Response, Status, get_request
+from src.parser.calls.base import get_request
 
 HEADERS = {
     'sec-ch-ua': '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',
@@ -28,9 +27,5 @@ async def get_match_up_response(event_id: int):
     return response
 
 
-async def _dev(event_id: int):
-    response = await get_match_up_response(event_id)
-    print(response.data[0]['id'])
-
-if __name__ == '__main__':
-    asyncio.run(_dev(4))
+if __name__ == "__main__":
+    asyncio.run(_dev())

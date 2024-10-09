@@ -1,4 +1,4 @@
-from src.utils.proxy import proxy_manager
+from src.parser.utils import proxy_manager
 import re
 
 
@@ -16,8 +16,3 @@ def test_proxy_update():
     proxy_manager.update()
     new_proxy = proxy_manager.proxy
     assert old_proxy != new_proxy
-
-
-def test_proxy_infinity_update():
-    pass
-

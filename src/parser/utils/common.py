@@ -23,11 +23,3 @@ def calc_coeff(price):
         return round(price / 100 + 1, 3)
     return round(abs(100 / price) + 1, 3)
 
-
-def period_corrector(title: str, period: int) -> str:
-    if period == 0:
-        prefix = 'Игра'
-    else:
-        prefix = f'{period} Тайм'
-    total = f'{title.title()} - {prefix}'
-    return total
