@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URL(self):
         return (f"postgresql+asyncpg://{os.environ['DB_USER']}:{os.environ['DB_PASS']}@{os.environ['DB_HOST']}:"
-                "5432/{os.environ['DB_NAME']}")
+                f"5432/{os.environ['DB_NAME']}")
 
 
 settings = Settings(_case_sensitive=False)
