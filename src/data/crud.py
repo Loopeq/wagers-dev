@@ -8,7 +8,7 @@ from typing import List, Optional
 
 from asyncpg import ForeignKeyViolationError
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlalchemy import Integer, and_, cast, func, insert, inspect, or_, select, text, desc, update, exists, delete
+from sqlalchemy import Integer, cast, func, insert, inspect, or_, select, text, desc, update, exists, delete
 from sqlalchemy.orm import aliased, contains_eager, joinedload, selectinload, object_session, ORMExecuteState
 from sqlalchemy import and_
 from sqlalchemy.sql.expression import func
@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session
 
 async def create_tables():
     async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        # await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
 
@@ -54,10 +54,12 @@ class MatchOrm:
         async with async_session_factory() as session:
             current_time = datetime.datetime.utcnow()
             query = select(Match.start_time, Match.id)
+
             if start_timedelta:
                 query = query.filter(Match.start_time > current_time + start_timedelta)
             if end_timedelta:
-                query = query.filter(Match.start_time <= current_time + end_timedelta)
+                query = query.filter(Match.start_time <= current_time + end_timedelta, Match.start_time > current_time)
+
             result = await session.execute(query)
             matches = result.fetchall()
             matches_dto = [MatchUpcomingDTO.model_validate(row, from_attributes=True) for row in matches]
@@ -116,7 +118,7 @@ class LeagueOrm:
 class UpdateManager:
 
     @staticmethod
-    async def insert_bets(bets: List[BetAddDTO], point_delay):
+    async def insert_bets(bets: List[BetAddDTO]):
         async with (async_session_factory() as session):
 
             if not bets:
@@ -153,16 +155,13 @@ class UpdateManager:
                      .join(b_new, and_(b_old.version == version,
                                        b_old.type == b_new.type,
                                        b_old.period == b_new.period)))
+
             query = query.filter(
+                func.abs(b_old.point - b_new.point) != 0,
                 b_new.version == version + 1,
                 b_old.match_id == match_id,
                 b_new.match_id == match_id
             )
-
-            if point_delay != 0:
-                query = query.filter(func.abs(b_old.point - b_new.point) >= point_delay)
-            else:
-                query = query.filter(func.abs(b_old.point - b_new.point) != point_delay)
 
             result = await session.execute(query)
             not_equals = result.fetchall()

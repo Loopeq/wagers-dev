@@ -12,15 +12,15 @@ from src.parser.utils.common import gmt_to_utc, calc_coeff
 from src.logs import logger
 
 
-async def collect_content(matches: List[MatchUpcomingDTO], point_delay: int):
-    tasks = [process_match(match, point_delay) for match in matches]
+async def collect_content(matches: List[MatchUpcomingDTO]):
+    logger.info(f'Start collecting for {len(matches)} matches')
+    tasks = [process_match(match) for match in matches]
     await asyncio.gather(*tasks)
+    logger.info(f'Finish collecting for {len(matches)} matches')
 
 
-async def process_match(match: MatchUpcomingDTO, point_delay: int):
-
+async def process_match(match: MatchUpcomingDTO):
     content_response = await get_straight_response(match_id=match.id)
-
     time_now = datetime.datetime.utcnow()
 
     if content_response.status == Status.DENIED or match.start_time < time_now:
@@ -54,4 +54,4 @@ async def process_match(match: MatchUpcomingDTO, point_delay: int):
                       type=BetTypeEnum[w_type],
                       period=period,
                       created_at=response_date))
-    await UpdateManager.insert_bets(bets, point_delay=point_delay)
+    await UpdateManager.insert_bets(bets)

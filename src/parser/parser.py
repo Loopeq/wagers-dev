@@ -8,34 +8,33 @@ from src.parser.collector.content import collect_content
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.logs import logger
-
+import logging
 
 scheduler = AsyncIOScheduler()
 
 
-async def parse(start: Optional[int] = None, end: Optional[int] = None):
-    logger.info(f'Start collecting data between {start} and {end}')
+async def parse_headers():
+    await collect_heads()
+
+
+async def parse_content(start: Optional[int] = None, end: Optional[int] = None):
     stmd = timedelta(hours=start) if start else None
     edmd = timedelta(hours=end) if end else None
-    await collect_heads()
     matches = await MatchOrm.get_upcoming_matches(start_timedelta=stmd,
                                                   end_timedelta=edmd)
-    point_delay = 2 if start in [1, 3] else 0
-    await collect_content(matches, point_delay=point_delay)
-    logger.info(f'Finish collecting data between {start} and {end}')
+    await collect_content(matches)
 
 
 async def run_parser():
+    scheduler.add_job(parse_headers, 'interval', minutes=60)
+
     time_stemps = [
-                   {'s': 1, "e": 3, "m": 300},
-                   {'s': 0, "e": 1, "m": 300},
-                   {'s': 3, "m": 20}]
+        {'s': 1, "e": 3, "m": 30},
+        {'s': 0, "e": 1, "m": 5},
+        {'s': 3, "m": 100}]
+
     for ts in time_stemps:
-        scheduler.add_job(parse, 'interval', seconds=ts['m'], args=[ts.get('s'), ts.get('e')])
+        scheduler.add_job(parse_content, 'interval', minutes=ts['m'], args=[ts.get('s'), ts.get('e')])
+    logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
     scheduler.start()
 
-
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.create_task(run_parser())
-    loop.run_forever()
