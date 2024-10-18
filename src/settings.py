@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self):
-        return (f"postgresql+asyncpg://{os.environ['DB_USER']}:{os.environ['DB_PASS']}@{os.environ['DB_HOST']}:"
+        return (f"postgresql+asyncpg://{os.environ['DB_USER']}:{os.environ['DB_PASS']}@amvera-senya-std-cnpg-wagers-db-rw:"
                 f"5432/{os.environ['DB_NAME']}")
 
 
