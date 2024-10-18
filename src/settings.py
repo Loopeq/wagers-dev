@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     WEBSHARE_API: str = os.environ['WEBSHARE_API']
 
     @property
-    def DATABASE_URL_asyncpg(self):
+    def DATABASE_URL(self):
         return (f"postgresql+asyncpg://{os.environ['DB_USER']}:{os.environ['DB_PASS']}@{os.environ['DB_HOST']}:"
                 f"{os.environ['DB_PORT']}/{os.environ['DB_NAME']}")
 
