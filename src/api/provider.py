@@ -12,6 +12,7 @@ from src.data.database import async_session_factory
 from src.data.models import Match, Bet, BetChange, League, MatchMember
 import json
 from src.data.schemas import BetDTO
+from src.parser.calls.event_details import get_match_details
 
 
 class ApiOrm:
@@ -27,17 +28,29 @@ class ApiOrm:
             mm_home = aliased(MatchMember)
             mm_away = aliased(MatchMember)
             m = aliased(Match)
-
             history = []
             for match_id in match_ids.fetchall():
                 query = select(m.id, mm_home.name, mm_away.name, m.start_time) \
                     .select_from(m).join(mm_home, and_(mm_home.match_id == match_id[0], mm_home.side == 'home')) \
                     .join(mm_away, and_(mm_away.match_id == match_id[0], mm_away.side == 'away')) \
-                    .filter(m.id == match_id[0])
+                    .filter(m.id == match_id[0], m.start_time < datetime.datetime.utcnow())
                 result = await session.execute(query)
+
                 info = result.fetchone()
-                info = {'match_id': info[0], 'home_name': info[1], 'away_name': info[2], 'start_time': info[3]}
-                history.append(info)
+                
+                if info:
+                    match_details = await get_match_details(match_id[0])
+                    if match_details:
+                        details = [{'number': detail.get('number'),
+                                    'team_1_score': detail.get('team_1_score'),
+                                    'team_2_score': detail.get('team_2_score')} for detail in match_details]
+                    else:
+                        details = None
+
+                    info = {'match_id': info[0], 'home_name': info[1], 'away_name': info[2], 'start_time': info[3],
+                            'details': details}
+
+                    history.append(info)
             return history
 
     @staticmethod
@@ -257,8 +270,7 @@ class ApiOrm:
 
 
 async def _dev():
-    res = await ApiOrm.get_point_change(1598666903)
-    print(res)
+    res = await ApiOrm.get_match_history_by_team_name('Paisas', current_match_id=1598844927)
 
 
 if __name__ == "__main__":
