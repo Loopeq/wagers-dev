@@ -13,10 +13,11 @@ from src.logs import logger
 async def collect_heads_data(data: list[dict]):
     for event in data:
         event_type = event.get('type')
+        hasLive = event['hasLive']
         start_time = iso_to_utc(event.get('startTime'))
         now_date = datetime.datetime.utcnow()
 
-        if (event_type != 'matchup') or now_date > start_time:
+        if bool(hasLive) or (event_type != 'matchup') or now_date > start_time:
             continue
 
         match_id = event.get('id')

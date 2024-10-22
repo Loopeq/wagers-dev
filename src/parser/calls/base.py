@@ -18,13 +18,14 @@ class Response(BaseModel):
     headers: Any = {}
 
 
-async def get_request(url: str, headers: dict, timeout: float = 3.0) -> Response:
+async def get_request(url: str, headers: dict, timeout: float = 3.0, params: dict = None) -> Response:
     pm = ProxyManager()
     async with aiohttp.ClientSession() as session:
         while True:
             try:
                 async with session.get(url,
                                        headers=headers,
+                                       params=params,
                                        proxy=pm.proxy,
                                        timeout=timeout) as resp:
                     if resp.status == 200:
