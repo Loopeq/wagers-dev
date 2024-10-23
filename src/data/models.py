@@ -44,18 +44,6 @@ class MatchSideEnum(enum.Enum):
     away = 'away'
 
 
-class BetStatusEnum(enum.Enum):
-    open = 'open'
-    closed = 'closed'
-
-
-class BetValueTypeEnum(enum.Enum):
-    home = 'home'
-    away = 'away'
-    over = 'over'
-    under = 'under'
-
-
 class Sport(Base):
     __tablename__ = 'sport'
 
