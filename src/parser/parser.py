@@ -28,7 +28,6 @@ async def parse_content(start: Optional[int] = None, end: Optional[int] = None):
 async def run_parser():
     await parse_headers()
     scheduler.add_job(parse_headers, 'interval', minutes=60)
-    #30 5 100
     time_stemps = [
         {'s': 1, "e": 3, "m": 30},
         {'s': 0, "e": 1, "m": 5},
