@@ -19,7 +19,7 @@ from src.data.schemas import (MatchDTO, SportDTO, LeagueDTO,
                               BetDTO, BetAddDTO,
                               MatchUpcomingDTO, BetChangeAddDTO)
 from src.data.models import Sport, League, Match, MatchMember, MatchResultEnum, MatchSideEnum, \
-    BetTypeEnum, Bet, BetStatusEnum, BetChange
+    BetTypeEnum, Bet, BetChange
 from src.data.database import Base, async_engine, async_session_factory
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import async_object_session, AsyncSession
@@ -29,6 +29,7 @@ from sqlalchemy.orm import Session
 
 async def create_tables():
     async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
 
@@ -82,7 +83,6 @@ class MatchMemberOrm:
                     raise ValueError(f'Match with id {match_member.match_id} does not exist.')
             except Exception:
                 await session.rollback()
-                raise
 
 
 class SportOrm:
@@ -98,6 +98,14 @@ class SportOrm:
             except Exception:
                 await session.rollback()
 
+    @staticmethod
+    async def fetch_sports():
+        async with async_session_factory() as session:
+            stmt = await session.execute(select(Sport))
+            result = stmt.scalars().all()
+            result_dto = [SportDTO.model_validate(row, from_attributes=True) for row in result]
+            return result_dto
+
 
 class LeagueOrm:
 
@@ -112,6 +120,8 @@ class LeagueOrm:
                 await session.rollback()
                 if 'foreign key constraint' in str(e.orig):
                     raise ValueError(f'Sport with id {league.sport_id} does not exist.')
+            except Exception:
+                session.rollback()
 
 
 class UpdateManager:
@@ -170,3 +180,12 @@ class UpdateManager:
                 session.add_all(bet_changes)
 
             await session.commit()
+
+
+async def _dev():
+    res = await SportOrm.fetch_sports()
+    print(res)
+
+
+if __name__ == "__main__":
+    asyncio.run(_dev())

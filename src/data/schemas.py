@@ -2,7 +2,7 @@ import datetime
 from datetime import timedelta
 from typing import Optional
 
-from src.data.models import BetTypeEnum, MatchSideEnum, MatchResultEnum, BetStatusEnum, BetValueTypeEnum
+from src.data.models import BetTypeEnum, MatchSideEnum, MatchResultEnum
 from pydantic import BaseModel, field_validator
 
 
