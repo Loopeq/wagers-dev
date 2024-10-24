@@ -4,7 +4,7 @@ import math
 from datetime import timedelta
 import random
 
-from typing import List, Optional
+from typing import List, Optional, AsyncGenerator
 
 from asyncpg import ForeignKeyViolationError
 from fastapi import Depends
@@ -187,7 +187,8 @@ class UserOrm:
 
     @staticmethod
     async def get_user_db(session: AsyncSession = Depends(get_async_session)):
-        yield SQLAlchemyUserDatabase(session, User)
+        async for db_session in session:
+            yield SQLAlchemyUserDatabase(db_session, User)
 
 
 async def _dev():

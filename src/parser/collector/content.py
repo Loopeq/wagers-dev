@@ -12,11 +12,11 @@ from src.parser.utils.common import gmt_to_utc, calc_coeff
 from src.logs import logger
 
 
-async def collect_content(matches: List[MatchUpcomingDTO]):
-    logger.info(f'Start collecting for {len(matches)} matches')
+async def collect_content(matches: List[MatchUpcomingDTO], start, end):
+    logger.info(f'[{start} - {end}] Start collecting for {len(matches)} matches')
     tasks = [process_match(match) for match in matches]
     await asyncio.gather(*tasks)
-    logger.info(f'Finish collecting for {len(matches)} matches')
+    logger.info(f'[{start} - {end}] Finish collecting for {len(matches)} matches')
 
 
 async def process_match(match: MatchUpcomingDTO):

@@ -4,6 +4,8 @@ from typing import Optional
 
 from src.data.models import BetTypeEnum, MatchSideEnum, MatchResultEnum
 from pydantic import BaseModel, field_validator
+import uuid
+from fastapi_users import schemas
 
 
 class SportDTO(BaseModel):
@@ -61,3 +63,11 @@ class BetDTO(BetAddDTO):
 class BetChangeAddDTO(BaseModel):
     old_bet_id: int
     new_bet_id: int
+
+
+class UserRead(schemas.BaseUser[uuid.UUID]):
+    pass
+
+
+class UserCreate(schemas.BaseUserCreate):
+    pass

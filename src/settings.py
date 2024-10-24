@@ -11,6 +11,8 @@ load_dotenv(_env_path)
 
 class Settings(BaseSettings):
     WEBSHARE_API: str = os.environ['WEBSHARE_API']
+    SECRET: str = os.environ['SECRET']
+    RECOVERY_SECRET: str = os.environ['RECOVERY_SECRET']
 
     @property
     def DATABASE_URL(self):
