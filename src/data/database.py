@@ -11,7 +11,7 @@ async_engine = create_async_engine(
     echo=False
 )
 
-async_session_factory = async_sessionmaker(async_engine)
+async_session_factory = async_sessionmaker(async_engine, expire_on_commit=False)
 
 str_256 = Annotated[str, 256]
 str_128 = Annotated[str, 128]

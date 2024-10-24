@@ -1,6 +1,8 @@
 import datetime
 import enum
 from typing import Annotated, Optional
+
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import (
     TIMESTAMP,
     DateTime,
@@ -102,3 +104,7 @@ class BetChange(Base):
     id: Mapped[intpk]
     old_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id'), nullable=False)
     new_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id'), nullable=False)
+
+
+class User(SQLAlchemyBaseUserTableUUID, Base):
+    pass

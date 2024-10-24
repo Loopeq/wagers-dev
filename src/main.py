@@ -9,14 +9,13 @@ import json
 from starlette.middleware.cors import CORSMiddleware  # NEW
 from src.api.provider import ApiOrm
 from src.api.schemas import FilterResponse, FilterRequest, filters
-from src.data.crud import UpdateManager, create_tables
+from src.data.crud import UpdateManager
 from src.data.schemas import SportDTO
 from src.parser import parser
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await create_tables()
     await asyncio.create_task(parser.run_parser())
     yield
 
