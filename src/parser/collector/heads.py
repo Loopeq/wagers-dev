@@ -11,6 +11,8 @@ from src.logs import logger
 
 
 async def collect_heads_data(data: list[dict]):
+    count = 0
+    logger.info(f'Start collecting for {len(data)} head matches')
     for event in data:
         event_type = event.get('type')
         hasLive = event['hasLive']
@@ -19,7 +21,7 @@ async def collect_heads_data(data: list[dict]):
 
         if bool(hasLive) or (event_type != 'matchup') or now_date > start_time:
             continue
-
+        count += 1
         match_id = event.get('id')
         league = event.get('league')
         league_id = league.get('id')
@@ -42,6 +44,7 @@ async def collect_heads_data(data: list[dict]):
         await MatchOrm.insert_match(match_dto)
         await MatchMemberOrm.insert_match_member(match_member_home_dto)
         await MatchMemberOrm.insert_match_member(match_member_away_dto)
+    logger.info(f'Finish collecting for {count} head matches')
 
 
 async def collect_heads():
