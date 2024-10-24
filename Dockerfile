@@ -10,6 +10,6 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD alembic stamp head
+ENTRYPOINT ["sh", "-c"]
 
-CMD gunicorn src.main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind=0.0.0.0:8000
+CMD ["alembic upgrade head && gunicorn src.main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind=0.0.0.0:8000"]
