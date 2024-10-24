@@ -7,6 +7,8 @@ import random
 from typing import List, Optional
 
 from asyncpg import ForeignKeyViolationError
+from fastapi import Depends
+from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy import Integer, cast, func, insert, inspect, or_, select, text, desc, update, exists, delete
 from sqlalchemy.orm import aliased, contains_eager, joinedload, selectinload, object_session, ORMExecuteState
@@ -19,18 +21,12 @@ from src.data.schemas import (MatchDTO, SportDTO, LeagueDTO,
                               BetDTO, BetAddDTO,
                               MatchUpcomingDTO, BetChangeAddDTO)
 from src.data.models import Sport, League, Match, MatchMember, MatchResultEnum, MatchSideEnum, \
-    BetTypeEnum, Bet, BetChange
+    BetTypeEnum, Bet, BetChange, User
 from src.data.database import Base, async_engine, async_session_factory
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import async_object_session, AsyncSession
 from sqlalchemy import case, literal_column
 from sqlalchemy.orm import Session
-
-
-async def create_tables():
-    async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
 
 
 class MatchOrm:
@@ -180,6 +176,18 @@ class UpdateManager:
                 session.add_all(bet_changes)
 
             await session.commit()
+
+
+class UserOrm:
+
+    @staticmethod
+    async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+        async with async_session_factory() as session:
+            yield session
+
+    @staticmethod
+    async def get_user_db(session: AsyncSession = Depends(get_async_session)):
+        yield SQLAlchemyUserDatabase(session, User)
 
 
 async def _dev():

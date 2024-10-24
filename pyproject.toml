@@ -23,6 +23,7 @@ uvicorn = {extras = ["standard"], version = "^0.30.6"}
 websockets = "^13.1"
 colorlog = "^6.8.2"
 gunicorn = "^23.0.0"
+fastapi-users = {extras = ["sqlalchemy"], version = "^13.0.0"}
 
 [tool.poetry.group.dev.dependencies]
 openpyxl = "^3.1.5"
