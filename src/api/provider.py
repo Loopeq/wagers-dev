@@ -38,19 +38,14 @@ class ApiOrm:
 
                 info = result.fetchone()
                 
-                if info:
-                    match_details = await get_match_details(match_id[0])
-                    if match_details:
-                        details = [{'number': detail.get('number'),
-                                    'team_1_score': detail.get('team_1_score'),
-                                    'team_2_score': detail.get('team_2_score')} for detail in match_details]
-                    else:
-                        details = None
+                if not info:
+                    return {}
 
-                    info = {'match_id': info[0], 'home_name': info[1], 'away_name': info[2], 'start_time': info[3],
-                            'details': details}
+                details = None
+                info = {'match_id': info[0], 'home_name': info[1], 'away_name': info[2], 'start_time': info[3],
+                        'details': details}
 
-                    history.append(info)
+                history.append(info)
             return history
 
     @staticmethod

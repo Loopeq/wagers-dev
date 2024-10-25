@@ -1,7 +1,8 @@
 import asyncio
 import datetime
+import urllib
 from contextlib import asynccontextmanager
-from fastapi import status
+from fastapi import status, Path
 import fastapi_users
 import uvicorn
 from fastapi import FastAPI, WebSocket, Depends, WebSocketDisconnect, HTTPException
@@ -10,7 +11,7 @@ from typing import List, Optional
 import json
 from starlette.middleware.cors import CORSMiddleware  # NEW
 from fastapi.responses import JSONResponse
-
+import urllib
 from src.api.auth import auth_backend, fastapi_users, current_user
 from src.api.provider import ApiOrm
 from src.api.schemas import FilterResponse, FilterRequest, filters
@@ -33,10 +34,9 @@ origins = [
     "https://www.swaeger.com",
     "https://swaeger.com"
 ]
-
-if settings.DEV:
-    origins.append('http://localhost:*')
-    origins.append('http://localhost')
+if settings.DEV == '1':
+    origins.append('http://localhost:8086')
+    origins.append('https://localhost:8086')
 
 app.add_middleware(
     CORSMiddleware,
@@ -65,8 +65,10 @@ async def get_point_change(match_id: int, user: User = Depends(current_user)):
     return changes
 
 
-@app.get('/history/{team_name}')
-async def get_team_history(team_name: str, current_match_id: int, user: User = Depends(current_user)):
+@app.get('/history')
+async def get_team_history(team_name: str,
+                           current_match_id: int,
+                           user: User = Depends(current_user)):
     team_info = await ApiOrm.get_match_history_by_team_name(team_name=team_name, current_match_id=current_match_id)
     return team_info
 
