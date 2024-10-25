@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse
 from typing import List, Optional
 import json
 from starlette.middleware.cors import CORSMiddleware  # NEW
+from starlette.responses import JSONResponse
 
 from src.api.auth import auth_backend, fastapi_users, current_user
 from src.api.provider import ApiOrm
