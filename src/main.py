@@ -77,8 +77,7 @@ app.include_router(
     tags=["auth"],
 )
 
-app.include_router(
-    fastapi_users.get_verify_router(UserRead),
-    prefix="/auth",
-    tags=["auth"],
-)
+
+@app.get("/auth/check")
+async def check_token(user=Depends(current_user)):
+    return JSONResponse(content={"status": "authenticated"}, status_code=200)
