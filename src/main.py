@@ -28,9 +28,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 origins = [
-    "http://localhost:*",
-    "https://localhost:*",
-    "https://wagers-frontend.onrender.com"
+    "https://www.swaeger.com/",
+    "https://swaeger.com/"
 ]
 
 app.add_middleware(
