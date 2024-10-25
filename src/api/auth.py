@@ -10,7 +10,11 @@ from src.settings import settings
 
 SECRET = settings.SECRET
 
-cookie_transport = CookieTransport(cookie_max_age=3600, cookie_name='wags', cookie_httponly=False)
+cookie_transport = CookieTransport(cookie_max_age=3600,
+                                   cookie_name='wags',
+                                   cookie_httponly=False,
+                                   cookie_secure=True,
+                                   cookie_samesite='None')
 
 
 def get_jwt_strategy() -> JWTStrategy:
