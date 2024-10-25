@@ -28,8 +28,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 origins = [
-    "https://www.swaeger.com/",
-    "https://swaeger.com/"
+    "https://www.swaeger.com",
+    "https://swaeger.com"
 ]
 
 app.add_middleware(
