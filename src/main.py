@@ -1,10 +1,10 @@
 import asyncio
 import datetime
 from contextlib import asynccontextmanager
-
+from fastapi import status
 import fastapi_users
 import uvicorn
-from fastapi import FastAPI, WebSocket, Depends, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, Depends, WebSocketDisconnect, HTTPException
 from fastapi.responses import HTMLResponse
 from typing import List, Optional
 import json
@@ -18,6 +18,7 @@ from src.data.crud import UpdateManager
 from src.data.models import User
 from src.data.schemas import SportDTO, UserRead, UserCreate
 from src.parser import parser
+from src.settings import settings
 
 
 @asynccontextmanager
@@ -32,6 +33,10 @@ origins = [
     "https://www.swaeger.com",
     "https://swaeger.com"
 ]
+
+if settings.DEV:
+    origins.append('http://localhost:*')
+    origins.append('http://localhost')
 
 app.add_middleware(
     CORSMiddleware,
@@ -72,10 +77,18 @@ app.include_router(
     tags=["auth"],
 )
 
+
+async def is_admin(user: User = Depends(current_user)):
+    if not user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Not enough permission')
+    return user
+
+
 app.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
     prefix="/auth",
     tags=["auth"],
+    dependencies=[Depends(is_admin)]
 )
 
 

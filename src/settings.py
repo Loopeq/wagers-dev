@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     WEBSHARE_API: str = os.environ['WEBSHARE_API']
     SECRET: str = os.environ['SECRET']
     RECOVERY_SECRET: str = os.environ['RECOVERY_SECRET']
-
+    DEV: str = os.environ.get('DEV')
     @property
     def DATABASE_URL(self):
         return (f"postgresql+asyncpg://{os.environ['DB_USER']}:{os.environ['DB_PASS']}@{os.environ['DB_HOST']}:"
@@ -21,3 +21,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings(_case_sensitive=False)
+
