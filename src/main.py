@@ -30,7 +30,7 @@ app = FastAPI(lifespan=lifespan)
 origins = [
     "http://localhost",
     "https://localhost",
-    "https://wagers-7593f.web.app"
+    "https://wagers-frontend.onrender.com"
 ]
 
 app.add_middleware(
