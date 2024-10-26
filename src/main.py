@@ -35,8 +35,9 @@ origins = [
     "https://swaeger.com"
 ]
 if settings.DEV == '1':
-    origins.append('http://localhost:8086')
-    origins.append('https://localhost:8086')
+    for port in range(8010, 8200):
+        origins.append(f'http://localhost:{port}')
+
 
 app.add_middleware(
     CORSMiddleware,
