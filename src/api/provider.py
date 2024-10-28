@@ -221,7 +221,7 @@ class ApiOrm:
             if (filters.finished is None) and (filters.hour is None):
                 query = query.filter(m.start_time >= datetime.datetime.utcnow())
             elif filters.finished:
-                query = query.filter(m.start_time < datetime.datetime.utcnow()).limit(10)
+                query = query.filter(m.start_time < datetime.datetime.utcnow()).limit(30)
             elif filters.hour:
                 query = query.filter(
                     and_(m.start_time <= datetime.datetime.utcnow() + timedelta(hours=filters.hour),
@@ -231,7 +231,7 @@ class ApiOrm:
                                    subquery.c.change_count, subquery.c.last_change_time)
 
             if filters.filter == ValueFilterType.match_start_time:
-                query = query.order_by(m.start_time.asc())
+                query = query.order_by(m.start_time.desc())
             elif filters.filter == ValueFilterType.last_change_time:
                 query = query.order_by(subquery.c.last_change_time.desc().nulls_last())
             elif filters.filter == ValueFilterType.count_of_changes:

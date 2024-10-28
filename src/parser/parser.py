@@ -26,13 +26,12 @@ async def parse_content(start: Optional[int] = None, end: Optional[int] = None):
 
 
 async def run_parser():
-    # await parse_headers()
+    await parse_headers()
     scheduler.add_job(parse_headers, 'interval', minutes=60)
     time_stemps = [
         {'s': 1, "e": 3, "m": 30},
         {'s': 0, "e": 1, "m": 5},
         {'s': 3, "m": 100}]
-    # await parse_content(start=time_stemps[2].get('s'))
     for ts in time_stemps:
         scheduler.add_job(parse_content, 'interval', minutes=ts['m'], args=[ts.get('s'), ts.get('e')])
     logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
