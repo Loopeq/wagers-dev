@@ -61,6 +61,13 @@ class MatchOrm:
             matches_dto = [MatchUpcomingDTO.model_validate(row, from_attributes=True) for row in matches]
             return matches_dto
 
+    @staticmethod
+    async def exists_match_by_id(match_id: int) -> bool:
+        async with async_session_factory() as session:
+            query = select(Match.id).filter(Match.id == match_id)
+            result = await session.execute(query)
+            return result.scalar() is not None
+
 
 class MatchMemberOrm:
 

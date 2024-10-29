@@ -66,20 +66,21 @@ class Match(Base):
 
     id: Mapped[intpk] = mapped_column(autoincrement=False)
     league_id: Mapped[int] = mapped_column(ForeignKey('league.id'), nullable=False)
-    start_time: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    start_time: Mapped[datetime.datetime] = mapped_column(nullable=False, index=True)
 
 
 class MatchMember(Base):
     __tablename__ = 'match_member'
 
     id: Mapped[intpk]
-    match_id: Mapped[int] = mapped_column(ForeignKey('match.id'), nullable=False)
+    match_id: Mapped[int] = mapped_column(ForeignKey('match.id'), nullable=False, index=True)
     name: Mapped[str_64] = mapped_column(nullable=False)
     status: Mapped[MatchResultEnum] = mapped_column(nullable=True)
     side: Mapped[MatchSideEnum] = mapped_column(nullable=False)
 
     __table_args__ = (
         UniqueConstraint('match_id', 'side', name='uq_match_combination'),
+        Index('ix_match_member_match_id_side', 'match_id', 'side')
     )
 
 
@@ -87,14 +88,14 @@ class Bet(Base):
     __tablename__ = 'bet'
 
     id: Mapped[intpk]
-    match_id: Mapped[int] = mapped_column(ForeignKey('match.id'), nullable=False)
+    match_id: Mapped[int] = mapped_column(ForeignKey('match.id'), nullable=False, index=True)
     point: Mapped[float] = mapped_column(nullable=False)
     home_cf: Mapped[float] = mapped_column(nullable=False)
     away_cf: Mapped[float] = mapped_column(nullable=False)
     type: Mapped[BetTypeEnum] = mapped_column(nullable=False)
     period: Mapped[int] = mapped_column(nullable=False)
     version: Mapped[int] = mapped_column(nullable=False, default=1)
-    created_at: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(nullable=False, index=True)
 
 
 class BetChange(Base):
@@ -102,8 +103,8 @@ class BetChange(Base):
     __tablename__ = 'bet_change'
 
     id: Mapped[intpk]
-    old_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id'), nullable=False)
-    new_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id'), nullable=False)
+    old_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id'), nullable=False, index=True)
+    new_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id'), nullable=False, index=True)
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):

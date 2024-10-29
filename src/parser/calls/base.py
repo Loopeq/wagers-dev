@@ -7,6 +7,7 @@ from src.parser.utils.proxy import ProxyManager, NoValidProxyError
 from pydantic import BaseModel
 
 
+
 class Status(enum.Enum):
     ACCEPT = 200
     DENIED = 400
