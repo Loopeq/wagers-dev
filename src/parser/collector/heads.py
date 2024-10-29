@@ -5,7 +5,7 @@ from src.parser.calls.base import Status
 from src.parser.calls.matchups import get_match_up_response
 from src.data.models import MatchSideEnum
 from src.parser.utils.common import iso_to_utc
-from src.data.crud import SportOrm, LeagueOrm, MatchOrm, MatchMemberOrm
+from src.data.crud import SportOrm, LeagueOrm, MatchOrm, MatchMemberOrm, UpdateManager
 from src.data.schemas import SportDTO, LeagueDTO, MatchDTO, MatchMemberAddDTO
 from src.logs import logger
 
@@ -44,11 +44,8 @@ async def collect_heads_data(data: list[dict]):
         match_member_home_dto = MatchMemberAddDTO(match_id=match_id, name=home_name, side=MatchSideEnum.home)
         match_member_away_dto = MatchMemberAddDTO(match_id=match_id, name=away_name, side=MatchSideEnum.away)
 
-        tasks.append(SportOrm.insert_sport(sport_dto))
-        tasks.append(LeagueOrm.insert_league(league_dto))
-        tasks.append(MatchOrm.insert_match(match_dto))
-        tasks.append(MatchMemberOrm.insert_match_member(match_member_home_dto))
-        tasks.append(MatchMemberOrm.insert_match_member(match_member_away_dto))
+        tasks.append(UpdateManager.insert_match(sport_dto, league_dto, match_dto, match_member_home_dto, match_member_away_dto))
+
     await asyncio.gather(*tasks)
     logger.info(f'Finish collecting for {count} head matches')
 
