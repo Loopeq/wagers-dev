@@ -13,16 +13,21 @@ from src.logs import logger
 async def collect_heads_data(data: list[dict]):
     count = 0
     logger.info(f'Start collecting for {len(data)} head matches')
+    tasks = []
     for event in data:
         event_type = event.get('type')
         start_time = iso_to_utc(event.get('startTime'))
         now_date = datetime.datetime.utcnow()
+        match_id = event.get('id')
 
         if (event_type != 'matchup') or now_date >= start_time:
             continue
 
+        exists = await MatchOrm.exists_match_by_id(match_id)
+        if exists:
+            continue
+
         count += 1
-        match_id = event.get('id')
         league = event.get('league')
         league_id = league.get('id')
         league_name = league.get('name')
@@ -39,11 +44,12 @@ async def collect_heads_data(data: list[dict]):
         match_member_home_dto = MatchMemberAddDTO(match_id=match_id, name=home_name, side=MatchSideEnum.home)
         match_member_away_dto = MatchMemberAddDTO(match_id=match_id, name=away_name, side=MatchSideEnum.away)
 
-        await SportOrm.insert_sport(sport_dto)
-        await LeagueOrm.insert_league(league_dto)
-        await MatchOrm.insert_match(match_dto)
-        await MatchMemberOrm.insert_match_member(match_member_home_dto)
-        await MatchMemberOrm.insert_match_member(match_member_away_dto)
+        tasks.append(SportOrm.insert_sport(sport_dto))
+        tasks.append(LeagueOrm.insert_league(league_dto))
+        tasks.append(MatchOrm.insert_match(match_dto))
+        tasks.append(MatchMemberOrm.insert_match_member(match_member_home_dto))
+        tasks.append(MatchMemberOrm.insert_match_member(match_member_away_dto))
+    await asyncio.gather(*tasks)
     logger.info(f'Finish collecting for {count} head matches')
 
 

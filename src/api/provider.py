@@ -37,7 +37,7 @@ class ApiOrm:
                 result = await session.execute(query)
 
                 info = result.fetchone()
-                
+
                 if not info:
                     return {}
 
@@ -219,9 +219,9 @@ class ApiOrm:
                 query = query.filter(subquery.c.change_count != 0)
 
             if (filters.finished is None) and (filters.hour is None):
-                query = query.filter(m.start_time >= datetime.datetime.utcnow()).limit(30)
+                query = query.filter(m.start_time >= datetime.datetime.utcnow())
             elif filters.finished:
-                query = query.filter(m.start_time < datetime.datetime.utcnow()).limit(30)
+                query = query.filter(m.start_time < datetime.datetime.utcnow())
             elif filters.hour:
                 query = query.filter(
                     and_(m.start_time <= datetime.datetime.utcnow() + timedelta(hours=filters.hour),
@@ -238,11 +238,9 @@ class ApiOrm:
                 query = query.order_by(subquery.c.change_count.desc().nulls_last())
 
             results = await session.execute(query)
-            info = []
-            for result in results:
-                match_id = result[0]
-                temp = {
-                    'match_id': match_id,
+            info = [
+                {
+                    'match_id': result[0],
                     'home_id': result[1],
                     'home_name': result[2],
                     'away_id': result[3],
@@ -251,9 +249,7 @@ class ApiOrm:
                     'league_name': result[6],
                     'change_count': result[7],
                     'last_change_time': result[8],
-                }
-                info.append(temp)
-
+                } for result in results]
             return info
 
 

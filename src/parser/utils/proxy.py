@@ -2,7 +2,6 @@ import aiohttp
 from webshare import ApiClient
 from pathlib import Path
 from src.settings import settings as conf
-import asyncio
 import requests
 
 _CLIENT = ApiClient(conf.WEBSHARE_API)
