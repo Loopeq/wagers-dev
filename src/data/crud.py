@@ -10,9 +10,10 @@ from asyncpg import ForeignKeyViolationError
 from fastapi import Depends
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlalchemy import Integer, cast, func, insert, inspect, or_, select, text, desc, update, exists, delete
+from sqlalchemy import Integer, cast, func, inspect, or_, select, text, desc, update, exists, delete
 from sqlalchemy.orm import aliased, contains_eager, joinedload, selectinload, object_session, ORMExecuteState
 from sqlalchemy import and_
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.expression import func
 from sqlalchemy.util import await_only
 
@@ -128,6 +129,31 @@ class LeagueOrm:
 
 
 class UpdateManager:
+    @staticmethod
+    async def insert_match(sport, league, match, mm_home, mm_away):
+        async with async_session_factory() as session:
+            async with session.begin():
+                await session.execute(insert(Sport).values(
+                    id=sport.id, name=sport.name).on_conflict_do_nothing())
+                await session.execute(insert(League).values(
+                    id=league.id,
+                    sport_id=league.sport_id,
+                    name=league.name).on_conflict_do_nothing())
+                await session.execute(
+                    insert(Match).values(
+                        id=match.id,
+                        league_id=match.league_id,
+                        start_time=match.start_time).on_conflict_do_nothing())
+                await session.execute(insert(MatchMember).values(
+                    match_id=mm_home.match_id,
+                    name=mm_home.name,
+                    status=mm_home.status,
+                    side=mm_home.side).on_conflict_do_nothing())
+                await session.execute(insert(MatchMember).values(
+                    match_id=mm_away.match_id,
+                    name=mm_away.name,
+                    status=mm_away.status,
+                    side=mm_away.side).on_conflict_do_nothing())
 
     @staticmethod
     async def insert_bets(bets: List[BetAddDTO]):
