@@ -241,12 +241,6 @@ class ApiOrm:
             info = []
             for result in results:
                 match_id = result[0]
-                changes = await ApiOrm.get_ini_last_points(match_id)
-                changes_list = [{'type': change[0],
-                                 'period': change[1],
-                                 'ini_point': change[2],
-                                 'last_point': change[3]} for change in changes]
-
                 temp = {
                     'match_id': match_id,
                     'home_id': result[1],
@@ -257,7 +251,6 @@ class ApiOrm:
                     'league_name': result[6],
                     'change_count': result[7],
                     'last_change_time': result[8],
-                    'changes': changes_list
                 }
                 info.append(temp)
 
