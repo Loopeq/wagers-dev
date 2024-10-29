@@ -231,7 +231,7 @@ class ApiOrm:
                                    subquery.c.change_count, subquery.c.last_change_time)
 
             if filters.filter == ValueFilterType.match_start_time:
-                query = query.order_by(m.start_time.desc())
+                query = query.order_by(m.start_time.asc())
             elif filters.filter == ValueFilterType.last_change_time:
                 query = query.order_by(subquery.c.last_change_time.desc().nulls_last())
             elif filters.filter == ValueFilterType.count_of_changes:
