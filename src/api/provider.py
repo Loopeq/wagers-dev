@@ -219,7 +219,7 @@ class ApiOrm:
                 query = query.filter(subquery.c.change_count != 0)
 
             if (filters.finished is None) and (filters.hour is None):
-                query = query.filter(m.start_time >= datetime.datetime.utcnow())
+                query = query.filter(m.start_time >= datetime.datetime.utcnow()).limit(30)
             elif filters.finished:
                 query = query.filter(m.start_time < datetime.datetime.utcnow()).limit(30)
             elif filters.hour:
