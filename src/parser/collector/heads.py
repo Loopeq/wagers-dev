@@ -18,9 +18,10 @@ async def collect_heads_data(data: list[dict]):
         event_type = event.get('type')
         start_time = iso_to_utc(event.get('startTime'))
         now_date = datetime.datetime.utcnow()
+        isLive = event.get('isLive')
         match_id = event.get('id')
 
-        if (event_type != 'matchup') or now_date >= start_time:
+        if (event_type != 'matchup') or now_date >= start_time or isLive:
             continue
 
         exists = await MatchOrm.exists_match_by_id(match_id)
@@ -55,4 +56,5 @@ async def collect_heads():
     if match_ups_response.status == Status.DENIED:
         return
     await collect_heads_data(data=match_ups_response.data)
+
 
