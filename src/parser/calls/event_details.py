@@ -32,7 +32,7 @@ async def get_match_details(event_id: int):
 
     if response.status == Status.ACCEPT:
         if response.data.get('events'):
-            return response.data.get('events')[0]['period_results']
+            return response.data.get('events')[0].get('period_results')
     return None
 
 
