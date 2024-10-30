@@ -26,11 +26,3 @@ async def get_straight_response(match_id: int):
     return response
 
 
-async def _dev():
-    res = await get_straight_response(1599875859)
-    print(json.dumps(res.data))
-
-
-if __name__ == "__main__":
-    asyncio.run(_dev())
-
