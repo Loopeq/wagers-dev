@@ -43,9 +43,10 @@ class ApiOrm:
             for row in result.fetchall():
                 details_stmt = select(MatchResult).filter(MatchResult.match_id == row.id, MatchResult.period == 0)
                 details_result = await session.execute(details_stmt)
-                details_data = details_result.fetchone()[0]
+                details_data = details_result.fetchone()
                 details = None
                 if details_data:
+                    details_data = details[0]
                     details = {
                         'period': details_data.period,
                         'team_1_score': details_data.team_1_score,
