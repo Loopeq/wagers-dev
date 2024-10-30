@@ -1,3 +1,6 @@
+import asyncio
+import json
+
 from src.parser.calls.base import get_request
 
 HEADERS = {
@@ -21,4 +24,13 @@ URL = 'https://guest.api.arcadia.pinnacle.com/0.1/matchups/{0}/markets/related/s
 async def get_straight_response(match_id: int):
     response = await get_request(url=URL.format(match_id), headers=HEADERS)
     return response
+
+
+async def _dev():
+    res = await get_straight_response(1599875859)
+    print(json.dumps(res.data))
+
+
+if __name__ == "__main__":
+    asyncio.run(_dev())
 

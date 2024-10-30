@@ -26,6 +26,9 @@ async def get_match_up_response(event_id: int):
     response = await get_request(url=URL.format(event_id), headers=HEADERS)
     return response
 
+async def _dev():
+    res = await get_match_up_response(1599875859)
+    print(res)
 
 if __name__ == "__main__":
     asyncio.run(_dev())
