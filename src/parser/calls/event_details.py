@@ -36,8 +36,5 @@ async def get_match_details(event_id: int):
     return None
 
 
-async def _dev():
-    result = await get_match_details(event_id=1599112339)
-
 if __name__ == "__main__":
     asyncio.run(_dev())

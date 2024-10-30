@@ -9,7 +9,7 @@ from sqlalchemy import and_
 from src.api.schemas import FilterRequest, ValueFilterType
 from src.api.utils import justify_changes
 from src.data.database import async_session_factory
-from src.data.models import Match, Bet, BetChange, League, MatchMember
+from src.data.models import Match, Bet, BetChange, League, MatchMember, MatchResult
 import json
 from src.data.schemas import BetDTO
 from src.parser.calls.event_details import get_match_details
@@ -39,16 +39,45 @@ class ApiOrm:
             ).order_by(m.start_time.desc())
 
             result = await session.execute(query)
+            history = []
+            for row in result.fetchall():
+                details_stmt = select(MatchResult).filter(MatchResult.match_id == row.id, MatchResult.period == 0)
+                details_result = await session.execute(details_stmt)
+                details_data = details_result.fetchone()[0]
+                details = None
+                if details_data:
+                    details = {
+                        'period': details_data.period,
+                        'team_1_score': details_data.team_1_score,
+                        'team_2_score': details_data.team_2_score
+                    }
+                else:
+                    api_data = await get_match_details(row.id)
+                    if api_data:
+                        for value in api_data:
+                            if value['number'] == 0:
+                                new_res = MatchResult(
+                                    match_id=row.id,
+                                    period=value['number'],
+                                    team_1_score=value['team_1_score'],
+                                    team_2_score=value['team_2_score']
+                                )
+                                session.add(new_res)
+                                await session.commit()
+                                details = {
+                                    'period': value['number'],
+                                    'team_1_score': value['team_1_score'],
+                                    'team_2_score': value['team_2_score'],
+                                }
 
-            history = [
-                {
-                    'match_id': row.id,
-                    'home_name': row.home_name,
-                    'away_name': row.away_name,
-                    'start_time': row.start_time,
-                    'details': None
-                } for row in result.fetchall()
-            ]
+                history.append({
+                        'match_id': row.id,
+                        'home_name': row.home_name,
+                        'away_name': row.away_name,
+                        'start_time': row.start_time,
+                        'details': details
+                        })
+
             return history
 
     @staticmethod
@@ -265,8 +294,8 @@ class ApiOrm:
 
 
 async def _dev():
-    res = await ApiOrm.get_match_history_by_team_name('Paisas', current_match_id=1598844927)
-
+    res = await ApiOrm.get_match_history_by_team_name('Indiana Pacers', current_match_id=1599483569)
+    print(res)
 
 if __name__ == "__main__":
     asyncio.run(_dev())
