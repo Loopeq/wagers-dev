@@ -109,3 +109,16 @@ class BetChange(Base):
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
     pass
+
+
+class MatchResult(Base):
+
+    __tablename__ = 'match_result'
+
+    id: Mapped[intpk]
+    match_id: Mapped[int] = mapped_column(ForeignKey('match.id'), nullable=False, index=True)
+    period: Mapped[int] = mapped_column(nullable=False, index=True)
+    team_1_score: Mapped[int] = mapped_column(nullable=False)
+    team_2_score: Mapped[int] = mapped_column(nullable=False)
+
+
