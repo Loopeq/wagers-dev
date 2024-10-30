@@ -73,7 +73,7 @@ class MatchMember(Base):
     __tablename__ = 'match_member'
 
     id: Mapped[intpk]
-    match_id: Mapped[int] = mapped_column(ForeignKey('match.id'), nullable=False, index=True)
+    match_id: Mapped[int] = mapped_column(ForeignKey('match.id', ondelete='CASCADE'), nullable=False, index=True)
     name: Mapped[str_64] = mapped_column(nullable=False)
     status: Mapped[MatchResultEnum] = mapped_column(nullable=True)
     side: Mapped[MatchSideEnum] = mapped_column(nullable=False)
@@ -88,7 +88,7 @@ class Bet(Base):
     __tablename__ = 'bet'
 
     id: Mapped[intpk]
-    match_id: Mapped[int] = mapped_column(ForeignKey('match.id'), nullable=False, index=True)
+    match_id: Mapped[int] = mapped_column(ForeignKey('match.id', ondelete='CASCADE'), nullable=False, index=True)
     point: Mapped[float] = mapped_column(nullable=False)
     home_cf: Mapped[float] = mapped_column(nullable=False)
     away_cf: Mapped[float] = mapped_column(nullable=False)
@@ -103,8 +103,8 @@ class BetChange(Base):
     __tablename__ = 'bet_change'
 
     id: Mapped[intpk]
-    old_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id'), nullable=False, index=True)
-    new_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id'), nullable=False, index=True)
+    old_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id', ondelete='CASCADE'), nullable=False, index=True)
+    new_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id', ondelete='CASCADE'), nullable=False, index=True)
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
