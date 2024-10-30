@@ -197,7 +197,7 @@ class ApiOrm:
                         'type': change[6],
                         'period': change[7],
                         'created_at': change[8]} for change in changes.fetchall()]
-            league_link = match[6].replace(' ', '', 2).replace(' ', '-')
+            league_link = match[6].replace(' ', '', 2).replace(' ', '-').replace('.', '')
             league_link = league_link.lower()
             home_name_link = match[2].replace(' ', '-').replace('/', '-').lower()
             away_name_link = match[4].replace(' ', '-').replace('/', '-').lower()
