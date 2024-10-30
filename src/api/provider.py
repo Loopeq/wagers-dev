@@ -2,7 +2,7 @@ import asyncio
 import datetime
 from datetime import timedelta
 from typing import Optional, List
-from sqlalchemy import select, text, func, literal_column
+from sqlalchemy import select, text, func, literal_column, or_
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.functions import coalesce
 from sqlalchemy import and_
@@ -20,32 +20,35 @@ class ApiOrm:
     @staticmethod
     async def get_match_history_by_team_name(team_name: str, current_match_id: int):
         async with async_session_factory() as session:
-            mm = aliased(MatchMember)
-            query = select(mm.match_id).select_from(mm).filter(mm.name == team_name,
-                                                               mm.match_id != current_match_id)
-            match_ids = await session.execute(query)
-
             mm_home = aliased(MatchMember)
             mm_away = aliased(MatchMember)
             m = aliased(Match)
-            history = []
-            for match_id in match_ids.fetchall():
-                query = select(m.id, mm_home.name, mm_away.name, m.start_time) \
-                    .select_from(m).join(mm_home, and_(mm_home.match_id == match_id[0], mm_home.side == 'home')) \
-                    .join(mm_away, and_(mm_away.match_id == match_id[0], mm_away.side == 'away')) \
-                    .filter(m.id == match_id[0], m.start_time < datetime.datetime.utcnow())
-                result = await session.execute(query)
 
-                info = result.fetchone()
+            query = select(
+                m.id,
+                mm_home.name.label("home_name"),
+                mm_away.name.label("away_name"),
+                m.start_time
+            ).select_from(m) \
+                .join(mm_home, and_(mm_home.match_id == m.id, mm_home.side == 'home')) \
+                .join(mm_away, and_(mm_away.match_id == m.id, mm_away.side == 'away')) \
+                .filter(
+                or_(mm_home.name == team_name, mm_away.name == team_name),
+                m.id != current_match_id,
+                m.start_time < datetime.datetime.utcnow()
+            ).order_by(m.start_time.desc())
 
-                if not info:
-                    return {}
+            result = await session.execute(query)
 
-                details = None
-                info = {'match_id': info[0], 'home_name': info[1], 'away_name': info[2], 'start_time': info[3],
-                        'details': details}
-
-                history.append(info)
+            history = [
+                {
+                    'match_id': row.id,
+                    'home_name': row.home_name,
+                    'away_name': row.away_name,
+                    'start_time': row.start_time,
+                    'details': None
+                } for row in result.fetchall()
+            ]
             return history
 
     @staticmethod
@@ -89,6 +92,7 @@ class ApiOrm:
             mm_home = aliased(MatchMember)
             mm_away = aliased(MatchMember)
             le = aliased(League)
+
             change_query = select(old_b.home_cf,
                                   new_b.home_cf,
                                   old_b.away_cf,
@@ -134,6 +138,12 @@ class ApiOrm:
                         'type': change[6],
                         'period': change[7],
                         'created_at': change[8]} for change in changes.fetchall()]
+            league_link = match[6].replace(' ', '', 2).replace(' ', '-')
+            league_link = league_link.lower()
+            home_name_link = match[2].replace(' ', '-').replace('/', '-').lower()
+            away_name_link = match[4].replace(' ', '-').replace('/', '-').lower()
+            link = (f'https://www.pinnacle.com/en/basketball/{league_link}/{home_name_link}'
+                    f'-vs-{away_name_link}/{match[0]}/#all')
 
             data = {
                 'initial_points': [{
@@ -145,6 +155,7 @@ class ApiOrm:
                     'created_at': ipoint.created_at
                 } for ipoint in initial_points],
                 'match': {
+                    'link': link,
                     'match_id': match[0],
                     'home_id': match[1],
                     'home_name': match[2],
