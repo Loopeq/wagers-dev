@@ -13,6 +13,29 @@ from src.data.models import Match, Bet, BetChange, League, MatchMember, MatchRes
 import json
 from src.data.schemas import BetDTO
 from src.parser.calls.event_details import get_match_details
+from src.parser.calls.league import fetch
+from cachetools import TTLCache
+
+
+class LeagueManager:
+    cache = TTLCache(maxsize=128, ttl=43200)
+
+    @staticmethod
+    async def is_right_order(league_id):
+
+        if league_id in LeagueManager.cache:
+            return LeagueManager.cache[league_id]
+        else:
+            leagues = await fetch()
+            if not leagues:
+                return None
+
+            for league in leagues:
+                if league['id'] == league_id:
+                    order = league['homeTeamType'] == 'Team1'
+                    LeagueManager.cache[league_id] = order
+                    return order
+            return None
 
 
 class ApiOrm:
@@ -23,15 +46,18 @@ class ApiOrm:
             mm_home = aliased(MatchMember)
             mm_away = aliased(MatchMember)
             m = aliased(Match)
+            l = aliased(League)
 
             query = select(
                 m.id,
                 mm_home.name.label("home_name"),
                 mm_away.name.label("away_name"),
-                m.start_time
+                m.start_time,
+                l.id.label('league_id')
             ).select_from(m) \
                 .join(mm_home, and_(mm_home.match_id == m.id, mm_home.side == 'home')) \
                 .join(mm_away, and_(mm_away.match_id == m.id, mm_away.side == 'away')) \
+                .join(l, l.id == m.league_id) \
                 .filter(
                 or_(mm_home.name == team_name, mm_away.name == team_name),
                 m.id != current_match_id,
@@ -46,38 +72,41 @@ class ApiOrm:
                 details_data = details_result.fetchone()
                 details = None
                 if details_data:
-                    details_data = details[0]
+                    details_data = details_data[0]
                     details = {
                         'period': details_data.period,
                         'team_1_score': details_data.team_1_score,
                         'team_2_score': details_data.team_2_score
                     }
                 else:
+                    order = await LeagueManager.is_right_order(row.league_id)
                     api_data = await get_match_details(row.id)
                     if api_data:
                         for value in api_data:
-                            if value['number'] == 0:
+                            if value['number'] == 0 and order is not None:
+                                team_1_score = value['team_1_score'] if order else value['team_2_score']
+                                team_2_score = value['team_2_score'] if order else value['team_1_score']
                                 new_res = MatchResult(
                                     match_id=row.id,
                                     period=value['number'],
-                                    team_1_score=value['team_1_score'],
-                                    team_2_score=value['team_2_score']
+                                    team_1_score=team_1_score,
+                                    team_2_score=team_2_score
                                 )
                                 session.add(new_res)
                                 await session.commit()
                                 details = {
                                     'period': value['number'],
-                                    'team_1_score': value['team_1_score'],
-                                    'team_2_score': value['team_2_score'],
+                                    'team_1_score': team_1_score,
+                                    'team_2_score': team_2_score,
                                 }
 
                 history.append({
-                        'match_id': row.id,
-                        'home_name': row.home_name,
-                        'away_name': row.away_name,
-                        'start_time': row.start_time,
-                        'details': details
-                        })
+                    'match_id': row.id,
+                    'home_name': row.home_name,
+                    'away_name': row.away_name,
+                    'start_time': row.start_time,
+                    'details': details
+                })
 
             return history
 
@@ -297,6 +326,7 @@ class ApiOrm:
 async def _dev():
     res = await ApiOrm.get_match_history_by_team_name('Indiana Pacers', current_match_id=1599483569)
     print(res)
+
 
 if __name__ == "__main__":
     asyncio.run(_dev())
