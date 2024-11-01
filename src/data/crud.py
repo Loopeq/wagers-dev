@@ -195,7 +195,7 @@ class UpdateManager:
                                        b_old.period == b_new.period)))
 
             query = query.filter(
-                func.abs(b_old.point - b_new.point) != 0,
+                b_old.point != b_new.point,
                 b_new.version == version + 1,
                 b_old.match_id == match_id,
                 b_new.match_id == match_id
