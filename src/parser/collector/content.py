@@ -40,7 +40,7 @@ async def process_match(match: MatchUpcomingDTO):
             continue
 
         prices = obj.get('prices')
-        point = max(prices[0].get('points'), prices[1].get('points'))
+        point = prices[0].get('points')
         un_touch_type.append(w_type)
         un_touch_period[w_type].append(period)
         home_price = calc_coeff(prices[0].get('price'))
