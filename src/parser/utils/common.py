@@ -1,7 +1,5 @@
 import datetime
 import pytz
-import json
-from pathlib import Path
 
 
 def iso_to_utc(iso_str: str):
