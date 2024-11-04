@@ -1,33 +1,24 @@
 import asyncio
 import datetime
-import math
 from datetime import timedelta
-import random
-
 from typing import List, Optional, AsyncGenerator
-
-from asyncpg import ForeignKeyViolationError
 from fastapi import Depends
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
-from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlalchemy import Integer, cast, func, inspect, or_, select, text, desc, update, exists, delete
-from sqlalchemy.orm import aliased, contains_eager, joinedload, selectinload, object_session, ORMExecuteState
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
+from sqlalchemy.orm import aliased
 from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.expression import func
-from sqlalchemy.util import await_only
 
 from src.data.schemas import (MatchDTO, SportDTO, LeagueDTO,
-                              MatchMemberDTO, MatchMemberAddDTO,
-                              BetDTO, BetAddDTO,
-                              MatchUpcomingDTO, BetChangeAddDTO)
-from src.data.models import Sport, League, Match, MatchMember, MatchResultEnum, MatchSideEnum, \
-    BetTypeEnum, Bet, BetChange, User
-from src.data.database import Base, async_engine, async_session_factory
-from sqlalchemy import event
-from sqlalchemy.ext.asyncio import async_object_session, AsyncSession
-from sqlalchemy import case, literal_column
-from sqlalchemy.orm import Session
+                              MatchMemberAddDTO,
+                              BetAddDTO,
+                              MatchUpcomingDTO)
+from src.data.models import Sport, League, Match, MatchMember, \
+     Bet, BetChange, User
+from src.data.database import async_session_factory
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class MatchOrm:

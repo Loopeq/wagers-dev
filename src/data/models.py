@@ -4,18 +4,8 @@ from typing import Annotated, Optional
 
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import (
-    TIMESTAMP,
-    DateTime,
-    CheckConstraint,
-    Column,
-    Enum,
     ForeignKey,
     Index,
-    Integer,
-    MetaData,
-    PrimaryKeyConstraint,
-    String,
-    Table,
     text, UniqueConstraint,
 )
 from src.data.database import (Base, str_256, str_128, str_64)

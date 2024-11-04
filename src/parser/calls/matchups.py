@@ -1,4 +1,3 @@
-import asyncio
 from src.parser.calls.base import get_request
 
 HEADERS = {

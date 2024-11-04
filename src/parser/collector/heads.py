@@ -5,7 +5,7 @@ from src.parser.calls.base import Status
 from src.parser.calls.matchups import get_match_up_response
 from src.data.models import MatchSideEnum
 from src.parser.utils.common import iso_to_utc
-from src.data.crud import SportOrm, LeagueOrm, MatchOrm, MatchMemberOrm, UpdateManager
+from src.data.crud import MatchOrm, UpdateManager
 from src.data.schemas import SportDTO, LeagueDTO, MatchDTO, MatchMemberAddDTO
 from src.logs import logger
 

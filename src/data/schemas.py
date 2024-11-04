@@ -1,9 +1,8 @@
 import datetime
-from datetime import timedelta
 from typing import Optional
 
 from src.data.models import BetTypeEnum, MatchSideEnum, MatchResultEnum
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 import uuid
 from fastapi_users import schemas
 
