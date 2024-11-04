@@ -1,7 +1,5 @@
 import asyncio
-
 import aiohttp
-
 from src.parser.calls.base import Status, Response
 from src.logs import logger
 

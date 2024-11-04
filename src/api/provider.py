@@ -1,114 +1,13 @@
-import asyncio
-import datetime
-from datetime import timedelta
-from typing import Optional, List
-from sqlalchemy import select, text, func, literal_column, or_
+from typing import List
+from sqlalchemy import select, func
 from sqlalchemy.orm import aliased
-from sqlalchemy.sql.functions import coalesce
 from sqlalchemy import and_
-from src.api.schemas import FilterRequest, ValueFilterType
-from src.api.utils import justify_changes
 from src.data.database import async_session_factory
-from src.data.models import Match, Bet, BetChange, League, MatchMember, MatchResult
-import json
+from src.data.models import Match, Bet, BetChange, League, MatchMember
 from src.data.schemas import BetDTO
-from src.parser.calls.event_details import get_match_details
-from src.parser.calls.league import fetch
-from cachetools import TTLCache
-
-
-class LeagueManager:
-    cache = TTLCache(maxsize=128, ttl=43200)
-
-    @staticmethod
-    async def is_right_order(league_id):
-
-        if league_id in LeagueManager.cache:
-            return LeagueManager.cache[league_id]
-        else:
-            leagues = await fetch()
-            if not leagues:
-                return None
-
-            for league in leagues:
-                if league['id'] == league_id:
-                    order = league['homeTeamType'] == 'Team1'
-                    LeagueManager.cache[league_id] = order
-                    return order
-            return None
 
 
 class ApiOrm:
-
-    @staticmethod
-    async def get_match_history_by_team_name(team_name: str, current_match_id: int):
-        async with async_session_factory() as session:
-            mm_home = aliased(MatchMember)
-            mm_away = aliased(MatchMember)
-            m = aliased(Match)
-            l = aliased(League)
-
-            query = select(
-                m.id,
-                mm_home.name.label("home_name"),
-                mm_away.name.label("away_name"),
-                m.start_time,
-                l.id.label('league_id')
-            ).select_from(m) \
-                .join(mm_home, and_(mm_home.match_id == m.id, mm_home.side == 'home')) \
-                .join(mm_away, and_(mm_away.match_id == m.id, mm_away.side == 'away')) \
-                .join(l, l.id == m.league_id) \
-                .filter(
-                or_(mm_home.name == team_name, mm_away.name == team_name),
-                m.id != current_match_id,
-                m.start_time < datetime.datetime.utcnow()
-            ).order_by(m.start_time.desc())
-
-            result = await session.execute(query)
-            history = []
-            for row in result.fetchall():
-                details_stmt = select(MatchResult).filter(MatchResult.match_id == row.id, MatchResult.period == 0)
-                details_result = await session.execute(details_stmt)
-                details_data = details_result.fetchone()
-                details = None
-                if details_data:
-                    details_data = details_data[0]
-                    details = {
-                        'period': details_data.period,
-                        'team_1_score': details_data.team_1_score,
-                        'team_2_score': details_data.team_2_score
-                    }
-                else:
-                    order = await LeagueManager.is_right_order(row.league_id)
-                    api_data = await get_match_details(row.id)
-                    if api_data:
-                        for value in api_data:
-                            if value['number'] == 0 and order is not None:
-                                team_1_score = value['team_1_score'] if order else value['team_2_score']
-                                team_2_score = value['team_2_score'] if order else value['team_1_score']
-                                new_res = MatchResult(
-                                    match_id=row.id,
-                                    period=value['number'],
-                                    team_1_score=team_1_score,
-                                    team_2_score=team_2_score
-                                )
-                                session.add(new_res)
-                                await session.commit()
-                                details = {
-                                    'period': value['number'],
-                                    'team_1_score': team_1_score,
-                                    'team_2_score': team_2_score,
-                                }
-
-                history.append({
-                    'match_id': row.id,
-                    'home_name': row.home_name,
-                    'away_name': row.away_name,
-                    'start_time': row.start_time,
-                    'details': details
-                })
-
-            return history
 
     @staticmethod
     async def get_initial_points(match_id: int) -> List[BetDTO]:
@@ -120,26 +19,6 @@ class ApiOrm:
             initial_change_orm = initial_change.scalars().all()
             initial_change_dto = [BetDTO.model_validate(row, from_attributes=True) for row in initial_change_orm]
             return initial_change_dto
-
-    @staticmethod
-    async def get_last_points(match_id: int) -> List[BetDTO]:
-        async with async_session_factory() as session:
-            bet = aliased(Bet)
-            version = await session.execute(
-                select(func.max(bet.version))
-                .select_from(bet)
-                .filter(bet.match_id == match_id))
-            version = version.fetchone()[0]
-
-            if version == 1:
-                return []
-
-            last_change_query = select(bet).select_from(bet) \
-                .filter(bet.match_id == match_id, bet.version == version)
-            last_change = await session.execute(last_change_query)
-            last_change_orm = last_change.scalars().all()
-            last_change_dto = [BetDTO.model_validate(row, from_attributes=True) for row in last_change_orm]
-            return last_change_dto
 
     @staticmethod
     async def get_point_change(match_id: int):
@@ -175,6 +54,7 @@ class ApiOrm:
                                  mm_away.name,
                                  m.start_time,
                                  le.name,
+                                 le.id,
                                  ). \
                 select_from(m). \
                 join(le, le.id == m.league_id, isouter=True). \
@@ -222,6 +102,7 @@ class ApiOrm:
                     'away_name': match[4],
                     'start_time': start_time,
                     'league_name': match[6],
+                    'league_id': match[7],
                 },
                 'changes': changes}
 
@@ -252,81 +133,3 @@ class ApiOrm:
             changes = changes.fetchall()
             return changes
 
-    @staticmethod
-    async def get_match_with_change(filters: FilterRequest):
-        async with async_session_factory() as session:
-            m = aliased(Match)
-            bc = aliased(BetChange)
-            le = aliased(League)
-            b = aliased(Bet)
-            mm_home = aliased(MatchMember)
-            mm_away = aliased(MatchMember)
-
-            subquery = select(m.id.label('match_id'),
-                              func.count(bc.id).label('change_count'),
-                              func.max(b.created_at).label('last_change_time')). \
-                join(b, b.match_id == m.id). \
-                join(bc, bc.new_bet_id == b.id). \
-                group_by(m.id).subquery()
-
-            query = select(m.id,
-                           mm_home.id,
-                           mm_home.name,
-                           mm_away.id,
-                           mm_away.name,
-                           m.start_time,
-                           le.name,
-                           coalesce(subquery.c.change_count, 0),
-                           subquery.c.last_change_time
-                           ). \
-                select_from(m). \
-                join(le, le.id == m.league_id, isouter=True). \
-                join(mm_home, and_(mm_home.match_id == m.id, mm_home.side == 'home'), isouter=True). \
-                join(mm_away, and_(mm_away.match_id == m.id, mm_away.side == 'away'), isouter=True). \
-                join(subquery, subquery.c.match_id == m.id, isouter=True)
-
-            if filters.not_null_point:
-                query = query.filter(subquery.c.change_count != 0)
-
-            if (filters.finished is None) and (filters.hour is None):
-                query = query.filter(m.start_time >= datetime.datetime.utcnow())
-            elif filters.finished:
-                query = query.filter(m.start_time < datetime.datetime.utcnow())
-            elif filters.hour:
-                query = query.filter(
-                    and_(m.start_time <= datetime.datetime.utcnow() + timedelta(hours=filters.hour),
-                         m.start_time >= datetime.datetime.utcnow()))
-
-            query = query.group_by(m.id, mm_home.id, mm_home.name, mm_away.id, mm_home.name, m.start_time, le.name,
-                                   subquery.c.change_count, subquery.c.last_change_time)
-
-            if filters.filter == ValueFilterType.match_start_time:
-                query = query.order_by(m.start_time.asc())
-            elif filters.filter == ValueFilterType.last_change_time:
-                query = query.order_by(subquery.c.last_change_time.desc().nulls_last())
-            elif filters.filter == ValueFilterType.count_of_changes:
-                query = query.order_by(subquery.c.change_count.desc().nulls_last())
-
-            results = await session.execute(query)
-            info = [
-                {
-                    'match_id': result[0],
-                    'home_id': result[1],
-                    'home_name': result[2],
-                    'away_id': result[3],
-                    'away_name': result[4],
-                    'start_time': result[5],
-                    'league_name': result[6],
-                    'change_count': result[7],
-                    'last_change_time': result[8],
-                } for result in results]
-            return info
-
-
-async def _dev():
-    res = await ApiOrm.get_match_history_by_team_name('Indiana Pacers', current_match_id=1599483569)
-    print(res)
-
-
-if __name__ == "__main__":
-    asyncio.run(_dev())

@@ -1,24 +1,17 @@
 import asyncio
-import datetime
-import urllib
 from contextlib import asynccontextmanager
-from fastapi import status, Path
-import fastapi_users
-import uvicorn
-from fastapi import FastAPI, WebSocket, Depends, WebSocketDisconnect, HTTPException
-from fastapi.responses import HTMLResponse
-from typing import List, Optional
-import json
+from fastapi import status
+from fastapi import FastAPI, Depends, HTTPException
 from starlette.middleware.cors import CORSMiddleware  # NEW
 from fastapi.responses import JSONResponse
-import urllib
 from src.api.auth import auth_backend, fastapi_users, current_user
+from src.api.dao.matches import MatchChangeOrm
 from src.api.provider import ApiOrm
 from src.api.schemas import FilterResponse, FilterRequest, filters
-from src.data.crud import UpdateManager
 from src.data.models import User
-from src.data.schemas import SportDTO, UserRead, UserCreate
+from src.data.schemas import UserRead, UserCreate
 from src.parser import parser
+from src.api.dao.history import HistoryOrm
 from src.settings import settings
 
 
@@ -38,7 +31,6 @@ if settings.DEV == '1':
     for port in range(8010, 8200):
         origins.append(f'http://localhost:{port}')
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -51,7 +43,7 @@ app.add_middleware(
 
 @app.get('/')
 async def get_match(filters: FilterRequest = Depends(), user: User = Depends(current_user)):
-    matches = await ApiOrm.get_match_with_change(filters=filters)
+    matches = await MatchChangeOrm.get_match_with_change(filters=filters)
     return matches
 
 
@@ -69,8 +61,11 @@ async def get_point_change(match_id: int, user: User = Depends(current_user)):
 @app.get('/history')
 async def get_team_history(team_name: str,
                            current_match_id: int,
+                           league_id: int,
                            user: User = Depends(current_user)):
-    team_info = await ApiOrm.get_match_history_by_team_name(team_name=team_name, current_match_id=current_match_id)
+    team_info = await HistoryOrm.get_match_history_by_team_name(team_name=team_name,
+                                                                current_match_id=current_match_id,
+                                                                league_id=league_id)
     return team_info
 
 

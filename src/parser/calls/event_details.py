@@ -1,7 +1,5 @@
 import asyncio
-
 import aiohttp
-
 from src.parser.calls.base import Response, Status
 
 HEADERS = {
