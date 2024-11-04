@@ -81,7 +81,6 @@ class HistoryOrm:
             mm_home = aliased(MatchMember)
             mm_away = aliased(MatchMember)
             m = aliased(Match)
-            l = aliased(League)
 
             query = select(
                 m.id,
@@ -101,8 +100,7 @@ class HistoryOrm:
             result = await session.execute(query)
             history = []
             for row in result.fetchall():
-                details = None
-                # details = await get_history_details(session, row)
+                details = await get_history_details(session, row)
                 history.append({
                     'match_id': row.id,
                     'home_name': row.home_name,
