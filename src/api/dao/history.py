@@ -7,7 +7,7 @@ from sqlalchemy.orm import aliased
 
 from src.parser.calls.league import fetch
 from src.data.database import async_session_factory
-from src.data.models import MatchMember, Match, League, MatchResult
+from src.data.models import MatchMember, Match, MatchResult
 from src.parser.calls.event_details import get_match_details
 
 
@@ -87,6 +87,7 @@ class HistoryOrm:
                 mm_home.name.label("home_name"),
                 mm_away.name.label("away_name"),
                 m.start_time,
+                m.league_id,
             ).select_from(m) \
                 .join(mm_home, and_(mm_home.match_id == m.id, mm_home.side == 'home')) \
                 .join(mm_away, and_(mm_away.match_id == m.id, mm_away.side == 'away')) \
