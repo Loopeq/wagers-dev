@@ -34,5 +34,3 @@ async def get_match_details(event_id: int):
     return None
 
 
-if __name__ == "__main__":
-    asyncio.run(_dev())
