@@ -6,7 +6,7 @@ from starlette.middleware.cors import CORSMiddleware  # NEW
 from fastapi.responses import JSONResponse
 from src.api.auth import auth_backend, fastapi_users, current_user
 from src.api.dao.matches import MatchChangeOrm
-from src.api.provider import ApiOrm
+from src.api.dao.changes import ChangesOrm
 from src.api.schemas import FilterResponse, FilterRequest, filters
 from src.data.models import User
 from src.data.schemas import UserRead, UserCreate
@@ -27,6 +27,7 @@ origins = [
     "https://www.swaeger.com",
     "https://swaeger.com"
 ]
+
 if settings.DEV == '1':
     for port in range(8010, 8200):
         origins.append(f'http://localhost:{port}')
@@ -54,7 +55,7 @@ async def get_filters(user: User = Depends(current_user)):
 
 @app.get('/match/{match_id}')
 async def get_point_change(match_id: int, user: User = Depends(current_user)):
-    changes = await ApiOrm.get_point_change(match_id=match_id)
+    changes = await ChangesOrm.get_point_change(match_id=match_id)
     return changes
 
 

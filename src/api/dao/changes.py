@@ -7,8 +7,7 @@ from src.data.models import Match, Bet, BetChange, League, MatchMember
 from src.data.schemas import BetDTO
 
 
-class ApiOrm:
-
+class ChangesOrm:
     @staticmethod
     async def get_initial_points(match_id: int) -> List[BetDTO]:
         async with async_session_factory() as session:
@@ -107,29 +106,3 @@ class ApiOrm:
                 'changes': changes}
 
             return data
-
-    @staticmethod
-    async def get_ini_last_points(match_id):
-        async with (async_session_factory() as session):
-            ini_bet = aliased(Bet)
-            last_bet = aliased(Bet)
-
-            max_version = await session.execute(
-                select(func.max(ini_bet.version))
-                .select_from(ini_bet)
-                .filter(ini_bet.match_id == match_id))
-            max_version = max_version.fetchone()[0]
-
-            query = select(ini_bet.type, ini_bet.period, ini_bet.point, last_bet.point, ).select_from(ini_bet).join(
-                last_bet, and_(
-                    last_bet.version == max_version,
-                    last_bet.match_id == match_id,
-                    last_bet.type == ini_bet.type,
-                    last_bet.period == ini_bet.period)
-            ).filter(func.abs(last_bet.point - ini_bet.point) != 0, ini_bet.match_id == match_id,
-                     ini_bet.version == 1).order_by(ini_bet.period, ini_bet.type)
-
-            changes = await session.execute(query)
-            changes = changes.fetchall()
-            return changes
-
