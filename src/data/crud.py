@@ -5,7 +5,7 @@ from typing import List, Optional, AsyncGenerator
 from fastapi import Depends
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select
+from sqlalchemy import select, exists, not_
 from sqlalchemy.orm import aliased
 from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import insert
@@ -16,13 +16,12 @@ from src.data.schemas import (MatchDTO, SportDTO, LeagueDTO,
                               BetAddDTO,
                               MatchUpcomingDTO)
 from src.data.models import Sport, League, Match, MatchMember, \
-     Bet, BetChange, User
+    Bet, BetChange, User, MatchResult
 from src.data.database import async_session_factory
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class MatchOrm:
-
     @staticmethod
     async def insert_match(match: MatchDTO):
         async with async_session_factory() as session:
@@ -60,9 +59,27 @@ class MatchOrm:
             result = await session.execute(query)
             return result.scalar() is not None
 
+    @staticmethod
+    async def get_matches_ready_to_results():
+        lg = aliased(League)
+        async with async_session_factory() as session:
+            now = datetime.datetime.utcnow()
+            sub_query = select(Match.id, Match.league_id).filter(Match.start_time < now,
+                                                                 (Match.start_time + timedelta(days=2)) > now,
+                                                                 (Match.start_time + timedelta(
+                                                                     hours=3)) < now).subquery()
+
+            stmt = select(sub_query.c.id, lg.id).select_from(sub_query).join(lg, lg.id == sub_query.c.league_id) \
+                .filter(
+                ~exists(
+                    select(1).select_from(MatchResult).filter(MatchResult.match_id == sub_query.c.id)
+                ))
+
+            result = await session.execute(stmt)
+            return result.fetchall()
+
 
 class MatchMemberOrm:
-
     @staticmethod
     async def insert_match_member(match_member: MatchMemberAddDTO):
         async with async_session_factory() as session:
@@ -216,8 +233,10 @@ class UserOrm:
 
 
 async def _dev():
-    res = await SportOrm.fetch_sports()
-    print(res)
+    res = await MatchOrm.get_matches_ready_to_results()
+    for match in res:
+        print(match)
+
 
 
 if __name__ == "__main__":

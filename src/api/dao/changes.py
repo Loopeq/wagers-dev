@@ -64,7 +64,7 @@ class ChangesOrm:
             changes = await session.execute(change_query)
             match = await session.execute(match_query)
             match = match.fetchone()
-            initial_points = await ApiOrm.get_initial_points(match_id)
+            initial_points = await ChangesOrm.get_initial_points(match_id)
 
             start_time = match[5]
             changes = [{'old_home_cf': change[0],
