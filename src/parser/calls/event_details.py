@@ -19,15 +19,13 @@ async def _get_match_details_response(event_id: int):
                 return Response(status=Status.ACCEPT, data=data, headers=resp.headers)
             elif resp.status == 404:
                 return Response(status=Status.DENIED)
-            else:
-                return None
+            return None
 
 
-async def get_match_details(event_id: int):
+async def get_match_details(event_id: int) -> dict:
     response = await _get_match_details_response(event_id=event_id)
     if not response:
         return None
-
     if response.status == Status.ACCEPT:
         if response.data.get('events'):
             return response.data.get('events')[0].get('period_results')

@@ -1,5 +1,7 @@
 import asyncio
 import aiohttp
+from aiohttp import ClientTimeout
+
 from src.parser.calls.base import Status, Response
 from src.logs import logger
 
@@ -11,7 +13,7 @@ URL = "https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues"
 
 
 async def _fetch_response():
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(timeout=ClientTimeout(total=10)) as session:
         async with session.get(URL,
                                headers=HEADERS,
                                params={'sport_id': 3}) as resp:
@@ -25,22 +27,17 @@ async def _fetch_response():
 
 
 async def fetch():
-    response = await _fetch_response()
-    if not response:
-        logger.info('Error while "https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues"')
-    if response.status == Status.ACCEPT:
-        if response.data.get('leagues'):
-            return response.data.get('leagues')
-    elif response.status == Status.DENIED:
-        logger.info('DENIED while "https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues"')
-
-
-async def _dev():
-    res = await fetch()
-    print(res)
-
-
-if __name__ == "__main__":
-    asyncio.run(_dev())
+    try:
+        response = await _fetch_response()
+    except:
+        logger.info("Can't connect to https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues")
+    else:
+        if not response:
+            logger.info('Error while "https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues"')
+        elif response.status == Status.ACCEPT:
+            if response.data.get('leagues'):
+                return response.data.get('leagues')
+        elif response.status == Status.DENIED:
+            logger.info('DENIED while "https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues"')
 
 

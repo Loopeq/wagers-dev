@@ -13,7 +13,7 @@ def time_filtered(query, filters: FilterRequest, m: Match):
     if (filters.finished is None) and (filters.hour is None):
         query = query.filter(m.start_time >= datetime.utcnow())
     elif filters.finished:
-        query = query.filter(m.start_time < datetime.utcnow())
+        query = query.filter(m.start_time < datetime.utcnow()).limit(500)
     elif filters.hour:
         query = query.filter(
             and_(m.start_time <= datetime.utcnow() + timedelta(hours=filters.hour),
