@@ -1,4 +1,3 @@
-import asyncio
 import aiohttp
 from src.parser.calls.base import Response, Status
 
@@ -30,5 +29,4 @@ async def get_match_details(event_id: int) -> dict:
         if response.data.get('events'):
             return response.data.get('events')[0].get('period_results')
     return None
-
 

@@ -13,7 +13,11 @@ from src.parser.collector.history import get_history_details
 scheduler = AsyncIOScheduler()
 
 
-async def cleanup():
+async def cleanup_matches():
+    await CleanUpOrm.remove_unref_matches()
+
+
+async def cleanup_changes():
     await CleanUpOrm.remove_unref_changes()
 
 
@@ -35,12 +39,14 @@ async def parse_content(start: Optional[int] = None, end: Optional[int] = None):
 
 async def run_parser():
     await parse_headers()
-    await cleanup()
+    await cleanup_changes()
+    await cleanup_matches()
     await parse_results()
 
     scheduler.add_job(parse_headers, 'interval', minutes=60)
-    scheduler.add_job(cleanup, 'interval', days=1)
-    scheduler.add_job(parse_results, 'interval', hours=4)
+    scheduler.add_job(cleanup_changes, 'interval', days=5)
+    scheduler.add_job(parse_results, 'interval', days=1)
+    scheduler.add_job(cleanup_matches, 'interval', days=20)
     time_stemps = [
         {'s': 1, "e": 3, "m": 30},
         {'s': 0, "e": 1, "m": 3},

@@ -8,8 +8,8 @@ from sqlalchemy import (
     Index,
     text, UniqueConstraint,
 )
-from src.data.database import (Base, str_256, str_128, str_64)
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from src.data.database import (Base, str_128, str_64)
+from sqlalchemy.orm import Mapped, mapped_column
 
 
 intpk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
@@ -106,7 +106,7 @@ class MatchResult(Base):
     __tablename__ = 'match_result'
 
     id: Mapped[intpk]
-    match_id: Mapped[int] = mapped_column(ForeignKey('match.id'), nullable=False, index=True)
+    match_id: Mapped[int] = mapped_column(ForeignKey('match.id', ondelete='CASCADE'), nullable=False, index=True)
     period: Mapped[int] = mapped_column(nullable=False, index=True)
     team_1_score: Mapped[int] = mapped_column(nullable=False)
     team_2_score: Mapped[int] = mapped_column(nullable=False)
