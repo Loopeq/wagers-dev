@@ -57,7 +57,6 @@ async def get_history_details(together: int = 10, sleep: float = 0.2) -> dict | 
                     )
                 )
 
-
     loops = [loop(match) for match in matches]
     await asyncio.gather(*loops)
 

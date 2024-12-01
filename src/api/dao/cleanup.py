@@ -1,7 +1,9 @@
+import datetime
+
 from sqlalchemy import select, func, and_, delete, not_
 
 from src.data.database import async_session_factory
-from src.data.models import BetChange, Bet
+from src.data.models import BetChange, Bet, Match
 from src.logs import logger
 
 
@@ -48,4 +50,17 @@ class CleanUpOrm:
 
             del_count = res.rowcount
             logger.info(f'Removed {del_count} objects from Bet')
+
+    @staticmethod
+    async def remove_unref_matches():
+        async with async_session_factory() as session:
+            now = datetime.datetime.utcnow()
+            stmt = delete(Match).filter(now > Match.start_time + datetime.timedelta(days=20))
+            res = await session.execute(stmt)
+            await session.commit()
+
+            del_count = res.rowcount
+            logger.info(f'Removed {del_count} object from Match')
+
+
 

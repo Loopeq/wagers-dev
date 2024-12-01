@@ -45,7 +45,8 @@ async def collect_heads_data(data: list[dict]):
         match_member_home_dto = MatchMemberAddDTO(match_id=match_id, name=home_name, side=MatchSideEnum.home)
         match_member_away_dto = MatchMemberAddDTO(match_id=match_id, name=away_name, side=MatchSideEnum.away)
 
-        tasks.append(UpdateManager.insert_match(sport_dto, league_dto, match_dto, match_member_home_dto, match_member_away_dto))
+        tasks.append(UpdateManager.insert_match(sport_dto, league_dto, match_dto, match_member_home_dto,
+                                                match_member_away_dto))
 
     await asyncio.gather(*tasks)
     logger.info(f'Finish collecting for {count} head matches')
