@@ -1,5 +1,7 @@
+import asyncio
 from typing import List
-from sqlalchemy import select, func
+from sqlalchemy import select, func, Select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 from sqlalchemy import and_
 from src.data.database import async_session_factory
@@ -7,7 +9,65 @@ from src.data.models import Match, Bet, BetChange, League, MatchMember
 from src.data.schemas import BetDTO
 
 
+def _get_change_query(match_id: int, **kwargs):
+    old_b = kwargs['old_b']
+    new_b = kwargs['new_b']
+    bc = kwargs['bc']
+    change_query = select(old_b.home_cf,
+                          new_b.home_cf,
+                          old_b.away_cf,
+                          new_b.away_cf,
+                          old_b.point,
+                          new_b.point,
+                          old_b.type,
+                          old_b.period,
+                          new_b.created_at) \
+        .select_from(bc) \
+        .join(old_b, old_b.id == bc.old_bet_id) \
+        .join(new_b, new_b.id == bc.new_bet_id) \
+        .filter(old_b.match_id == match_id,
+                new_b.match_id == match_id)
+    return change_query
+
+
+def _get_link(match):
+    league_link = match[6].replace(' ', '', 2).replace(' ', '-').replace('.', '')
+    league_link = league_link.lower()
+    home_name_link = match[2].replace(' ', '-').replace('/', '-').lower()
+    away_name_link = match[4].replace(' ', '-').replace('/', '-').lower()
+    link = (f'https://www.pinnacle.com/en/basketball/{league_link}/{home_name_link}'
+            f'-vs-{away_name_link}/{match[0]}/#all')
+    return link
+
+
 class ChangesOrm:
+
+    @staticmethod
+    async def get_highest_changes(match_id: int, session: AsyncSession, diff: int = 3) -> List[BetDTO]:
+        old_b = aliased(Bet)
+        new_b = aliased(Bet)
+        bc = aliased(BetChange)
+        change_query = _get_change_query(match_id, old_b=old_b, new_b=new_b, bc=bc)
+        abs_difference = func.abs(old_b.point - new_b.point)
+        change_query = change_query.filter(abs_difference >= diff)
+
+        change_query = change_query.order_by(abs_difference.desc())
+        response = await session.execute(change_query)
+        total_high = response.all()
+        result = {}
+        if total_high:
+            highest = total_high[0]
+            result = {
+                'max_score': {
+                    'period': highest[7],
+                    'type': highest[6],
+                    'old': highest[4],
+                    'new': highest[5],
+                },
+                'count': len(total_high)
+            }
+        return result
+
     @staticmethod
     async def get_initial_points(match_id: int) -> List[BetDTO]:
         async with async_session_factory() as session:
@@ -30,21 +90,8 @@ class ChangesOrm:
             mm_away = aliased(MatchMember)
             le = aliased(League)
 
-            change_query = select(old_b.home_cf,
-                                  new_b.home_cf,
-                                  old_b.away_cf,
-                                  new_b.away_cf,
-                                  old_b.point,
-                                  new_b.point,
-                                  old_b.type,
-                                  old_b.period,
-                                  new_b.created_at) \
-                .select_from(bc) \
-                .join(old_b, old_b.id == bc.old_bet_id) \
-                .join(new_b, new_b.id == bc.new_bet_id) \
-                .filter(old_b.match_id == match_id,
-                        new_b.match_id == match_id) \
-                .order_by(new_b.created_at.desc())
+            change_query = _get_change_query(match_id=match_id, old_b=old_b, new_b=new_b, bc=bc)
+            change_query = change_query.order_by(new_b.created_at.desc())
 
             match_query = select(m.id,
                                  mm_home.id,
@@ -65,6 +112,7 @@ class ChangesOrm:
             match = await session.execute(match_query)
             match = match.fetchone()
             initial_points = await ChangesOrm.get_initial_points(match_id)
+            link = _get_link(match)
 
             start_time = match[5]
             changes = [{'old_home_cf': change[0],
@@ -76,13 +124,6 @@ class ChangesOrm:
                         'type': change[6],
                         'period': change[7],
                         'created_at': change[8]} for change in changes.fetchall()]
-            league_link = match[6].replace(' ', '', 2).replace(' ', '-').replace('.', '')
-            league_link = league_link.lower()
-            home_name_link = match[2].replace(' ', '-').replace('/', '-').lower()
-            away_name_link = match[4].replace(' ', '-').replace('/', '-').lower()
-            link = (f'https://www.pinnacle.com/en/basketball/{league_link}/{home_name_link}'
-                    f'-vs-{away_name_link}/{match[0]}/#all')
-
             data = {
                 'initial_points': [{
                     'home_cf': ipoint.home_cf,
