@@ -1,0 +1,27 @@
+# Exported from Render on 2025-01-20T15:21:27Z
+databases:
+- name: postgres-wagers
+  databaseName: postgres_wagers
+  user: postgres_wagers_user
+  plan: basic-1gb
+  region: frankfurt
+  ipAllowList:
+  - source: 0.0.0.0/0
+    description: everywhere
+  postgresMajorVersion: "16"
+  diskSizeGB: 1
+services:
+- type: web
+  name: wagers-dev
+  runtime: docker
+  repo: https://github.com/Loopeq/wagers-dev
+  plan: starter
+  envVars:
+  - key: .env
+    sync: false
+  region: frankfurt
+  dockerContext: .
+  dockerfilePath: ./Dockerfile
+  domains:
+  - api.swaeger.com
+version: "1"

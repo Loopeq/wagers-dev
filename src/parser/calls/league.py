@@ -1,12 +1,11 @@
-import asyncio
 import aiohttp
 from aiohttp import ClientTimeout
-
-from src.parser.calls.base import Status, Response
+from src.core.settings import settings
+from src.parser.base import Status, Response
 from src.logs import logger
 
 HEADERS = {
-    "x-rapidapi-key": "7d2a653207msh4ec37fc83b57e21p19ffd7jsn24288ee9228f",
+    "x-rapidapi-key": settings.RAPID_KEY,
     "x-rapidapi-host": "pinnacle-odds.p.rapidapi.com"
 }
 URL = "https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues"

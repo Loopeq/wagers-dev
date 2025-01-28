@@ -1,17 +1,70 @@
 import asyncio
-from src.data.crud import MatchOrm
+from typing import List, Optional, Dict
+
+from src.core.db.db_helper import db_helper
+from src.core.models import MatchResult
+from src.parser.basketball.calls.event_details import get_match_details
+
+from src.parser.basketball.calls.league import fetch
+from src.core.crud.parser import MatchOrm
 from src.logs import logger
-from src.parser.calls.league import fetch
-from src.data.database import async_session_factory
-from src.data.models import MatchResult
-from src.parser.calls.event_details import get_match_details
 
 
-async def get_history_details(together: int = 10, sleep: float = 0.2) -> dict | None:
-    result: list = []
-    sem = asyncio.Semaphore(together)
+async def fetch_leagues() -> Optional[List[Dict]]:
+    return await fetch()
 
-    leagues = await fetch()
+
+def find_league_by_id(leagues: List[Dict], league_id: int) -> Optional[Dict]:
+    return next((league for league in leagues if league['id'] == league_id), None)
+
+
+def find_first_period_details(details: List[Dict]) -> Optional[Dict]:
+    return next((detail for detail in details if detail['number'] == 0), None)
+
+
+async def process_match(
+    match: List[int],
+    leagues: List[Dict],
+    semaphore: asyncio.Semaphore,
+    sleep_duration: float,
+    result: List[MatchResult],
+) -> None:
+    async with semaphore:
+        await asyncio.sleep(sleep_duration)
+        match_id, league_id = match
+        match_details = await get_match_details(match_id)
+
+        period_details = find_first_period_details(match_details)
+        league = find_league_by_id(leagues, league_id)
+
+        if period_details and league:
+            home_team_is_team1 = league.get('homeTeamType') == 'Team1'
+            team_1_score = (
+                period_details['team_1_score']
+                if home_team_is_team1
+                else period_details['team_2_score']
+            )
+            team_2_score = (
+                period_details['team_2_score']
+                if home_team_is_team1
+                else period_details['team_1_score']
+            )
+
+            result.append(
+                MatchResult(
+                    match_id=match_id,
+                    period=period_details['number'],
+                    team_1_score=team_1_score,
+                    team_2_score=team_2_score,
+                )
+            )
+
+
+async def get_history_details(together: int = 10, sleep: float = 0.2) -> Optional[dict]:
+    result: List[MatchResult] = []
+    semaphore = asyncio.Semaphore(together)
+
+    leagues = await fetch_leagues()
     if not leagues:
         return
 
@@ -19,48 +72,15 @@ async def get_history_details(together: int = 10, sleep: float = 0.2) -> dict | 
     if not matches:
         return
 
-    def check_order(leagues: list | None, l_id: int):
-        order = list(filter(lambda x: x['id'] == l_id, leagues))
-        if len(order):
-            return order[0]
-        return None
+    tasks = [
+        process_match(match, leagues, semaphore, sleep, result)
+        for match in matches
+    ]
+    await asyncio.gather(*tasks)
 
-    def check_details(details: list | None):
-        if details is None:
-            return None
-        details = list(filter(lambda x: x['number'] == 0, details))
-        if len(details):
-            return details[0]
-        return None
-
-    async def loop(match: list) -> None:
-        async with sem:
-            await asyncio.sleep(sleep)
-            m_id, l_id = match[0], match[1]
-            details = await get_match_details(m_id)
-            checked_details = check_details(details)
-            checked_order = check_order(leagues, l_id)
-
-            if checked_details and checked_order:
-                if checked_order.get('homeTeamType') == 'Team1':
-                    team_1_score = checked_details['team_1_score']
-                    team_2_score = checked_details['team_2_score']
-                else:
-                    team_1_score = checked_details['team_2_score']
-                    team_2_score = checked_details['team_1_score']
-                result.append(
-                    MatchResult(
-                        match_id=m_id,
-                        period=checked_details.get('number'),
-                        team_1_score=team_1_score,
-                        team_2_score=team_2_score,
-                    )
-                )
-
-    loops = [loop(match) for match in matches]
-    await asyncio.gather(*loops)
-
-    async with async_session_factory() as session:
+    async with db_helper.session_factory() as session:
         session.add_all(result)
         await session.commit()
-        logger.info(f'Finish collecting history for {len(result)} matches')
+
+    logger.info(f'Finish collecting history for {len(result)} matches')
+    return {"matches_processed": len(result)}

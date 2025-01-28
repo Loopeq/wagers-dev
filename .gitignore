@@ -1,3 +1,6 @@
 .env
 __pycache__/
 .idea/
+docker-compose.yaml
+docker-compose.yml
+Makefile

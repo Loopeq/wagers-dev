@@ -1,10 +1,8 @@
 import datetime
 from typing import Optional
-
-from src.data.models import BetTypeEnum, MatchSideEnum, MatchResultEnum
+from src.core.models import BetTypeEnum, MatchSideEnum, MatchResultEnum
 from pydantic import BaseModel
-import uuid
-from fastapi_users import schemas
+from uuid import UUID
 
 
 class SportDTO(BaseModel):
@@ -64,9 +62,24 @@ class BetChangeAddDTO(BaseModel):
     new_bet_id: int
 
 
-class UserRead(schemas.BaseUser[uuid.UUID]):
-    pass
+class BaseUser(BaseModel):
+    disabled: bool
+    superuser: bool
 
 
-class UserCreate(schemas.BaseUserCreate):
-    pass
+class UserOut(BaseUser):
+    id: int
+    uuid: UUID
+
+
+class UserInDB(BaseUser):
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    uuid: UUID | None = None
