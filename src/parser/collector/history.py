@@ -3,11 +3,9 @@ from typing import List, Optional, Dict
 
 from src.core.db.db_helper import db_helper
 from src.core.models import MatchResult
-from src.parser.basketball.calls.event_details import get_match_details
+from src.parser.calls.event_details import get_match_details
 
-from src.parser.basketball.calls.league import fetch
-from src.core.crud.parser import MatchOrm
-from src.logs import logger
+from src.parser.calls.league import fetch
 
 
 async def fetch_leagues() -> Optional[List[Dict]]:
@@ -82,5 +80,4 @@ async def get_history_details(together: int = 10, sleep: float = 0.2) -> Optiona
         session.add_all(result)
         await session.commit()
 
-    logger.info(f'Finish collecting history for {len(result)} matches')
     return {"matches_processed": len(result)}

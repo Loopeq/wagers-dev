@@ -1,4 +1,8 @@
 # Exported from Render on 2025-01-20T15:21:27Z
+
+previews:
+  generation: automatic
+
 databases:
 - name: postgres-wagers
   databaseName: postgres_wagers
@@ -10,6 +14,7 @@ databases:
     description: everywhere
   postgresMajorVersion: "16"
   diskSizeGB: 1
+
 services:
 - type: web
   name: wagers-dev
@@ -21,7 +26,32 @@ services:
     sync: false
   region: frankfurt
   dockerContext: .
+  autoDeploy: false
   dockerfilePath: ./Dockerfile
   domains:
   - api.swaeger.com
+
+- type: worker
+  name: parser-worker
+  runtime: python
+  repo: https://github.com/Loopeq/wagers-dev
+  plan: starter
+  envVars:
+  - key: .env
+    sync: false
+  region: frankfurt
+  autoDeploy: false
+  startCommand: "python -m src.parser.parser"
+
+- type: worker
+  name: db-init-worker
+  runtime: python
+  repo: https://github.com/Loopeq/wagers-dev
+  plan: starter
+  envVars:
+  - key: .env
+    sync: false
+  region: frankfurt
+  autoDeploy: false
+  startCommand: "python -m src.scripts.init_script"
 version: "1"

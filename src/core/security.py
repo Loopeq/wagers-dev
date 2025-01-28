@@ -5,11 +5,11 @@ import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
-from src.api.dao.user import UserOrm
+from src.core.crud.api.user import UserOrm
 from src.core.utils import verify_password
 from src.core.settings import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/login')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/v1/login')
 
 SECRET_KEY = settings.AUTH_SECRET
 ALGORITHM = settings.AUTH_ALGORITHM

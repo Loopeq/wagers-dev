@@ -6,7 +6,7 @@ from jwt import InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from src.api.dao.user import UserOrm
+from src.core.crud.api.user import UserOrm
 from src.core.db.db_helper import db_helper
 from src.core.schemas import TokenData, UserOut
 from src.core.security import ALGORITHM, SECRET_KEY
@@ -23,7 +23,6 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         uuid_str: str = payload.get("sub")
