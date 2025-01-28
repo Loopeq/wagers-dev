@@ -9,12 +9,20 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
+
+    # api
     WEBSHARE_API: str = os.environ['WEBSHARE_API']
     RAPID_KEY: str = os.environ['RAPID_KEY']
+
+    # dev flag
     DEV: str = os.environ.get('DEV')
+
+    # auth
     AUTH_SECRET: str = os.environ.get('AUTH_SECRET')
     AUTH_ALGORITHM: str = os.environ.get('AUTH_ALGORITHM')
     AUTH_EXPIRE_TOKEN_HOURS: int = os.environ.get('AUTH_EXPIRE_TOKEN_HOURS')
+
+    # superuser
     FIRST_USER_UUID: UUID = os.environ.get('FIRST_USER_UUID')
     FIRST_USER_PASSWORD: str = os.environ.get('FIRST_USER_PASSWORD')
 

@@ -1,6 +1,6 @@
 import datetime
 from typing import Optional
-from src.core.models import BetTypeEnum, MatchSideEnum, MatchResultEnum
+from src.core.models import BetTypeEnum, MatchSideEnum
 from pydantic import BaseModel
 from uuid import UUID
 
@@ -8,10 +8,6 @@ from uuid import UUID
 class SportDTO(BaseModel):
     id: int
     name: str
-
-
-class SportRelDTO(SportDTO):
-    leagues: list['LeagueDTO']
 
 
 class LeagueDTO(BaseModel):
@@ -35,7 +31,6 @@ class MatchMemberAddDTO(BaseModel):
     match_id: int
     name: str
     side: MatchSideEnum
-    status: Optional[MatchResultEnum] = None
 
 
 class MatchMemberDTO(MatchMemberAddDTO):
@@ -68,7 +63,6 @@ class BaseUser(BaseModel):
 
 
 class UserOut(BaseUser):
-    id: int
     uuid: UUID
 
 

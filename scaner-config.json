@@ -1,15 +1,22 @@
 {
   "sports": {
-    "Basketball": 4, "Tennis": 33, "Football": 15
+    "Basketball": 4,
+    "Tennis": 33,
+    "Soccer": 29
   },
   "parse_content": [
     {"start": 0, "end": 1, "minutes": 3},
     {"start": 1, "end": 3, "minutes": 5},
-    {"start": 3, "end": 100, "minutes": 10}
+    {"start": 3, "minutes": 10}
   ],
   "parse_allow_types": ["spread", "total"],
   "parse_headers": 30,
   "parse_results": 1440,
   "clean_changes_d": 1,
-  "clean_matches_d": 5
+  "clean_matches_d": 5,
+  "accuracy": {
+    "hour": 1,
+    "far": 2,
+    "near": 1
+  }
 }

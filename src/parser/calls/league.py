@@ -1,8 +1,9 @@
+import logging
+
 import aiohttp
 from aiohttp import ClientTimeout
 from src.core.settings import settings
 from src.parser.base import Status, Response
-from src.logs import logger
 
 HEADERS = {
     "x-rapidapi-key": settings.RAPID_KEY,
@@ -29,14 +30,14 @@ async def fetch():
     try:
         response = await _fetch_response()
     except:
-        logger.info("Can't connect to https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues")
+        logging.warning("Can't connect to https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues")
     else:
         if not response:
-            logger.info('Error while "https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues"')
+            logging.warning('Error while "https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues"')
         elif response.status == Status.ACCEPT:
             if response.data.get('leagues'):
                 return response.data.get('leagues')
         elif response.status == Status.DENIED:
-            logger.info('DENIED while "https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues"')
+            logging.warning('DENIED while "https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues"')
 
 

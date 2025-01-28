@@ -20,7 +20,7 @@ from src.core.models import Sport, League, Match, MatchMember, \
 class MatchOrm:
     @staticmethod
     async def insert_match(match: MatchDTO):
-        async with db_helper.session_getter() as session:
+        async with db_helper.session_factory() as session:
             try:
                 match_orm = Match(id=match.id, league_id=match.league_id, start_time=match.start_time)
                 session.add(match_orm)
@@ -31,34 +31,9 @@ class MatchOrm:
                 await session.rollback()
 
     @staticmethod
-    async def get_upcoming_matches(start_timedelta: Optional[timedelta] = None,
-                                   end_timedelta: Optional[timedelta] = None) -> (
-            List)[MatchUpcomingDTO]:
-        async with db_helper.session_getter() as session:
-            current_time = datetime.datetime.utcnow()
-            query = select(Match.start_time, Match.id)
-
-            if start_timedelta:
-                query = query.filter(Match.start_time > current_time + start_timedelta)
-            if end_timedelta:
-                query = query.filter(Match.start_time <= current_time + end_timedelta, Match.start_time > current_time)
-
-            result = await session.execute(query)
-            matches = result.fetchall()
-            matches_dto = [MatchUpcomingDTO.model_validate(row, from_attributes=True) for row in matches]
-            return matches_dto
-
-    @staticmethod
-    async def exists_match_by_id(match_id: int) -> bool:
-        async with db_helper.session_getter() as session:
-            query = select(Match.id).filter(Match.id == match_id)
-            result = await session.execute(query)
-            return result.scalar() is not None
-
-    @staticmethod
     async def get_matches_ready_to_results():
-        lg = aliased(League)
-        async with db_helper.session_getter() as session:
+        async with db_helper.session_factory() as session:
+            lg = aliased(League)
             now = datetime.datetime.utcnow()
             sub_query = select(Match.id, Match.league_id).filter(Match.start_time < now,
                                                                  (Match.start_time + timedelta(days=2)) > now,
@@ -78,7 +53,7 @@ class MatchOrm:
 class MatchMemberOrm:
     @staticmethod
     async def insert_match_member(match_member: MatchMemberAddDTO):
-        async with db_helper.session_getter() as session:
+        async with db_helper.session_factory() as session:
             try:
                 match_member_orm = MatchMember(match_id=match_member.match_id, name=match_member.name,
                                                status=match_member.status,
@@ -96,7 +71,7 @@ class MatchMemberOrm:
 class SportOrm:
     @staticmethod
     async def insert_sport(sport: SportDTO):
-        async with db_helper.session_getter() as session:
+        async with db_helper.session_factory() as session:
             try:
                 sport_orm = Sport(id=sport.id, name=sport.name)
                 session.add(sport_orm)
@@ -108,7 +83,7 @@ class SportOrm:
 
     @staticmethod
     async def fetch_sports():
-        async with db_helper.session_getter() as session:
+        async with db_helper.session_factory() as session:
             stmt = await session.execute(select(Sport))
             result = stmt.scalars().all()
             result_dto = [SportDTO.model_validate(row, from_attributes=True) for row in result]
@@ -116,10 +91,9 @@ class SportOrm:
 
 
 class LeagueOrm:
-
     @staticmethod
     async def insert_league(league: LeagueDTO):
-        async with db_helper.session_getter() as session:
+        async with db_helper.session_factory() as session:
             try:
                 league_orm = League(id=league.id, sport_id=league.sport_id, name=league.name)
                 session.add(league_orm)
@@ -129,40 +103,14 @@ class LeagueOrm:
                 if 'foreign key constraint' in str(e.orig):
                     raise ValueError(f'Sport with id {league.sport_id} does not exist.')
             except Exception:
-                session.rollback()
+                await session.rollback()
 
 
 class UpdateManager:
-    @staticmethod
-    async def insert_match(sport, league, match, mm_home, mm_away):
-        async with db_helper.session_getter() as session:
-            async with session.begin():
-                await session.execute(insert(Sport).values(
-                    id=sport.id, name=sport.name).on_conflict_do_nothing())
-                await session.execute(insert(League).values(
-                    id=league.id,
-                    sport_id=league.sport_id,
-                    name=league.name).on_conflict_do_nothing())
-                await session.execute(
-                    insert(Match).values(
-                        id=match.id,
-                        league_id=match.league_id,
-                        start_time=match.start_time).on_conflict_do_nothing())
-                await session.execute(insert(MatchMember).values(
-                    match_id=mm_home.match_id,
-                    name=mm_home.name,
-                    status=mm_home.status,
-                    side=mm_home.side).on_conflict_do_nothing())
-                await session.execute(insert(MatchMember).values(
-                    match_id=mm_away.match_id,
-                    name=mm_away.name,
-                    status=mm_away.status,
-                    side=mm_away.side).on_conflict_do_nothing())
 
     @staticmethod
     async def insert_bets(bets: List[BetAddDTO]):
-        async with db_helper.session_getter() as session:
-
+        async with db_helper.session_factory() as session:
             if not bets:
                 return
 
@@ -213,4 +161,3 @@ class UpdateManager:
                 session.add_all(bet_changes)
 
             await session.commit()
-

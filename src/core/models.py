@@ -47,7 +47,10 @@ class League(Base):
 
     id: Mapped[intpk] = mapped_column(autoincrement=False)
     sport_id: Mapped[int] = mapped_column(ForeignKey('sport.id'), nullable=False)
-    name: Mapped[str_128] = mapped_column(unique=True, nullable=False)
+    name: Mapped[str_128] = mapped_column(nullable=False)
+    _table_args__ = (
+        UniqueConstraint('name', 'sport_id', name='uq_league_combination'),
+    )
 
 
 class Match(Base):
@@ -85,15 +88,6 @@ class Bet(Base):
     period: Mapped[int] = mapped_column(nullable=False)
     version: Mapped[int] = mapped_column(nullable=False, default=1)
     created_at: Mapped[datetime.datetime] = mapped_column(nullable=False, index=True)
-
-
-class BetChange(Base):
-
-    __tablename__ = 'bet_change'
-
-    id: Mapped[intpk]
-    old_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id', ondelete='CASCADE'), nullable=False, index=True)
-    new_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id', ondelete='CASCADE'), nullable=False, index=True)
 
 
 class User(Base):

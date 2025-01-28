@@ -1,14 +1,33 @@
 import logging
-from colorlog import ColoredFormatter
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+from logging.config import dictConfig
 
 
-handler = logging.StreamHandler()
-handler.setFormatter(ColoredFormatter(
-    '%(log_color)s%(asctime)s - %(levelname)s - %(module)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-))
-logger.addHandler(handler)
-logger.propagate = False
+def setup_logging():
+    dictConfig({
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'default': {
+                'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            },
+        },
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'default',
+                'level': logging.INFO,
+            },
+        },
+        'loggers': {
+            'uvicorn': {
+                'handlers': ['console'],
+                'level': logging.INFO,
+                'propagate': True,
+            },
+            'fastapi': {
+                'handlers': ['console'],
+                'level': logging.INFO,
+                'propagate': True,
+            },
+        }
+    })

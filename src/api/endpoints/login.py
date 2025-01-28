@@ -1,10 +1,10 @@
 from datetime import timedelta
 from typing import Annotated
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
+from src.api.dependencies import CURRENT_ACTIVE_USER
 from src.core.schemas import Token
 from src.core.security import (
     authenticate_user,
@@ -33,7 +33,12 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.uuid}, expires_delta=access_token_expires
+        data={"sub": str(user.uuid)}, expires_delta=access_token_expires
     )
-
     return Token(access_token=access_token, token_type="bearer")
+
+
+@router.get("/check")
+async def check(current_user: CURRENT_ACTIVE_USER):
+    return current_user
+
