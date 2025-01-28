@@ -1,14 +1,12 @@
 import asyncio
-import logging
 from datetime import timedelta
 from typing import Optional
-
-from src.data.crud import MatchOrm
-from src.parser.collector.heads import collect_heads
-from src.parser.collector.content import collect_content
+from src.core.crud.parser import MatchOrm
+from src.core.parser.collector.heads import collect_heads
+from src.core.parser.collector.content import collect_content
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from src.api.dao.cleanup import CleanUpOrm
-from src.parser.collector.history import get_history_details
+from src.core.crud.api.cleanup import CleanUpOrm
+from src.core.parser.collector.history import get_history_details
 
 scheduler = AsyncIOScheduler()
 
@@ -39,9 +37,6 @@ async def parse_content(start: Optional[int] = None, end: Optional[int] = None):
 
 async def run_parser():
     await parse_headers()
-    await cleanup_changes()
-    await cleanup_matches()
-    await parse_results()
 
     scheduler.add_job(parse_headers, 'interval', minutes=60)
     scheduler.add_job(cleanup_changes, 'interval', days=5)
@@ -52,7 +47,14 @@ async def run_parser():
         {'s': 0, "e": 1, "m": 3},
         {'s': 3, "m": 100}]
     for ts in time_stemps:
-        scheduler.add_job(parse_content, 'interval', minutes=ts['m'], args=[ts.get('s'), ts.get('e')])
-    logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
+        scheduler.add_job(
+            parse_content,
+            'interval',
+            args=[ts.get('s'), ts.get('e')],
+            minutes=ts['m'],
+        )
     scheduler.start()
+    await asyncio.Event().wait()
 
+if __name__ == "__main__":
+    asyncio.run(run_parser())

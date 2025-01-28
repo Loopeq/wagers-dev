@@ -1,30 +1,26 @@
-import asyncio
 import datetime
 from datetime import timedelta
-from typing import List, Optional, AsyncGenerator
-from fastapi import Depends
-from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from typing import List, Optional
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select, exists, not_
+from sqlalchemy import select, exists
 from sqlalchemy.orm import aliased
 from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.expression import func
 
-from src.data.schemas import (MatchDTO, SportDTO, LeagueDTO,
+from src.core.db.db_helper import db_helper
+from src.core.schemas import (MatchDTO, SportDTO, LeagueDTO,
                               MatchMemberAddDTO,
                               BetAddDTO,
                               MatchUpcomingDTO)
-from src.data.models import Sport, League, Match, MatchMember, \
-    Bet, BetChange, User, MatchResult
-from src.data.database import async_session_factory
-from sqlalchemy.ext.asyncio import AsyncSession
+from src.core.models import Sport, League, Match, MatchMember, \
+    Bet, BetChange, MatchResult
 
 
 class MatchOrm:
     @staticmethod
     async def insert_match(match: MatchDTO):
-        async with async_session_factory() as session:
+        async with db_helper.session_getter() as session:
             try:
                 match_orm = Match(id=match.id, league_id=match.league_id, start_time=match.start_time)
                 session.add(match_orm)
@@ -38,7 +34,7 @@ class MatchOrm:
     async def get_upcoming_matches(start_timedelta: Optional[timedelta] = None,
                                    end_timedelta: Optional[timedelta] = None) -> (
             List)[MatchUpcomingDTO]:
-        async with async_session_factory() as session:
+        async with db_helper.session_getter() as session:
             current_time = datetime.datetime.utcnow()
             query = select(Match.start_time, Match.id)
 
@@ -54,7 +50,7 @@ class MatchOrm:
 
     @staticmethod
     async def exists_match_by_id(match_id: int) -> bool:
-        async with async_session_factory() as session:
+        async with db_helper.session_getter() as session:
             query = select(Match.id).filter(Match.id == match_id)
             result = await session.execute(query)
             return result.scalar() is not None
@@ -62,7 +58,7 @@ class MatchOrm:
     @staticmethod
     async def get_matches_ready_to_results():
         lg = aliased(League)
-        async with async_session_factory() as session:
+        async with db_helper.session_getter() as session:
             now = datetime.datetime.utcnow()
             sub_query = select(Match.id, Match.league_id).filter(Match.start_time < now,
                                                                  (Match.start_time + timedelta(days=2)) > now,
@@ -82,7 +78,7 @@ class MatchOrm:
 class MatchMemberOrm:
     @staticmethod
     async def insert_match_member(match_member: MatchMemberAddDTO):
-        async with async_session_factory() as session:
+        async with db_helper.session_getter() as session:
             try:
                 match_member_orm = MatchMember(match_id=match_member.match_id, name=match_member.name,
                                                status=match_member.status,
@@ -100,7 +96,7 @@ class MatchMemberOrm:
 class SportOrm:
     @staticmethod
     async def insert_sport(sport: SportDTO):
-        async with async_session_factory() as session:
+        async with db_helper.session_getter() as session:
             try:
                 sport_orm = Sport(id=sport.id, name=sport.name)
                 session.add(sport_orm)
@@ -112,7 +108,7 @@ class SportOrm:
 
     @staticmethod
     async def fetch_sports():
-        async with async_session_factory() as session:
+        async with db_helper.session_getter() as session:
             stmt = await session.execute(select(Sport))
             result = stmt.scalars().all()
             result_dto = [SportDTO.model_validate(row, from_attributes=True) for row in result]
@@ -123,7 +119,7 @@ class LeagueOrm:
 
     @staticmethod
     async def insert_league(league: LeagueDTO):
-        async with async_session_factory() as session:
+        async with db_helper.session_getter() as session:
             try:
                 league_orm = League(id=league.id, sport_id=league.sport_id, name=league.name)
                 session.add(league_orm)
@@ -139,7 +135,7 @@ class LeagueOrm:
 class UpdateManager:
     @staticmethod
     async def insert_match(sport, league, match, mm_home, mm_away):
-        async with async_session_factory() as session:
+        async with db_helper.session_getter() as session:
             async with session.begin():
                 await session.execute(insert(Sport).values(
                     id=sport.id, name=sport.name).on_conflict_do_nothing())
@@ -165,7 +161,7 @@ class UpdateManager:
 
     @staticmethod
     async def insert_bets(bets: List[BetAddDTO]):
-        async with (async_session_factory() as session):
+        async with db_helper.session_getter() as session:
 
             if not bets:
                 return
@@ -218,26 +214,3 @@ class UpdateManager:
 
             await session.commit()
 
-
-class UserOrm:
-
-    @staticmethod
-    async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
-        async with async_session_factory() as session:
-            yield session
-
-    @staticmethod
-    async def get_user_db(session: AsyncSession = Depends(get_async_session)):
-        async for db_session in session:
-            yield SQLAlchemyUserDatabase(db_session, User)
-
-
-async def _dev():
-    res = await MatchOrm.get_matches_ready_to_results()
-    for match in res:
-        print(match)
-
-
-
-if __name__ == "__main__":
-    asyncio.run(_dev())

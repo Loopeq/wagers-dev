@@ -3,11 +3,12 @@ import datetime
 from collections import defaultdict
 from typing import List
 
-from src.parser.calls.base import Status
-from src.parser.calls.straight import get_straight_response
-from src.data.crud import MatchOrm, UpdateManager
-from src.data.models import BetTypeEnum
-from src.data.schemas import MatchUpcomingDTO, BetAddDTO
+
+from src.parser.base import Status
+from src.parser.basketball.calls.straight import get_straight_response
+from src.core.crud.parser import UpdateManager
+from src.core.models import BetTypeEnum
+from src.core.schemas import MatchUpcomingDTO, BetAddDTO
 from src.parser.utils.common import gmt_to_utc, calc_coeff
 from src.logs import logger
 

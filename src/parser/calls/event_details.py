@@ -1,8 +1,9 @@
 import aiohttp
-from src.parser.calls.base import Response, Status
+from src.parser.base import Response, Status
+from src.core.settings import settings
 
 HEADERS = {
-    "x-rapidapi-key": "7d2a653207msh4ec37fc83b57e21p19ffd7jsn24288ee9228f",
+    "x-rapidapi-key": settings.RAPID_KEY,
     "x-rapidapi-host": "pinnacle-odds.p.rapidapi.com"
 }
 URL = "https://pinnacle-odds.p.rapidapi.com/kit/v1/details"

@@ -1,12 +1,11 @@
 import asyncio
 import datetime
 
-from src.parser.calls.base import Status
-from src.parser.calls.matchups import get_match_up_response
-from src.data.models import MatchSideEnum
+from src.parser.base import Status
+from src.parser.basketball.calls.matchups import get_match_up_response
+from src.core.models import MatchSideEnum
 from src.parser.utils.common import iso_to_utc
-from src.data.crud import MatchOrm, UpdateManager
-from src.data.schemas import SportDTO, LeagueDTO, MatchDTO, MatchMemberAddDTO
+from src.core.crud.parser import MatchOrm, UpdateManager
 from src.logs import logger
 
 
@@ -52,7 +51,7 @@ async def collect_heads_data(data: list[dict]):
     logger.info(f'Finish collecting for {count} head matches')
 
 
-async def collect_heads():
+async def collect_heads(sports: list[int]):
     match_ups_response = await get_match_up_response(4)
     if match_ups_response.status == Status.DENIED:
         return

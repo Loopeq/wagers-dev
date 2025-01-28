@@ -1,14 +1,14 @@
 import datetime
 import enum
-from typing import Annotated, Optional
+from typing import Annotated
+import uuid as uuid_pkg
 
-from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import (
     ForeignKey,
     Index,
     text, UniqueConstraint,
 )
-from src.data.database import (Base, str_128, str_64)
+from src.core.db.base import (Base, str_128, str_64)
 from sqlalchemy.orm import Mapped, mapped_column
 
 
@@ -23,7 +23,6 @@ updated_at = Annotated[datetime.datetime, mapped_column(
 class BetTypeEnum(enum.Enum):
     total = 'total'
     spread = 'spread'
-    team_total = 'team_total'
 
 
 class MatchResultEnum(enum.Enum):
@@ -97,8 +96,16 @@ class BetChange(Base):
     new_bet_id: Mapped[int] = mapped_column(ForeignKey('bet.id', ondelete='CASCADE'), nullable=False, index=True)
 
 
-class User(SQLAlchemyBaseUserTableUUID, Base):
-    pass
+class User(Base):
+
+    __tablename__ = 'user'
+
+    uuid: Mapped[uuid_pkg.UUID] = mapped_column(
+        primary_key=True, unique=True, default=uuid_pkg.uuid4, nullable=False
+    )
+    password: Mapped[str] = mapped_column(nullable=False)
+    disabled: Mapped[bool] = mapped_column(nullable=False, default=False)
+    superuser: Mapped[bool] = mapped_column(nullable=False, default=False)
 
 
 class MatchResult(Base):

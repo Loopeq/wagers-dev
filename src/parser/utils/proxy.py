@@ -1,8 +1,5 @@
-import aiohttp
 from webshare import ApiClient
-from pathlib import Path
-from src.settings import settings as conf
-import requests
+from src.core.settings import settings as conf
 
 _CLIENT = ApiClient(conf.WEBSHARE_API)
 _PROXIES = _CLIENT.get_proxy_list().get_results()

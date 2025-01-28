@@ -35,7 +35,6 @@ async def get_request(url: str, headers: dict, timeout: float = 3.0, params: dic
                         return Response(status=Status.DENIED)
                     else:
                         pm.update()
-
             except (ContentTypeError, TimeoutError, ClientError):
                 pm.update()
             except NoValidProxyError:
