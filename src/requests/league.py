@@ -3,7 +3,7 @@ import logging
 import aiohttp
 from aiohttp import ClientTimeout
 from src.core.settings import settings
-from src.parser.base import Status, Response
+from src.requests.base import Response
 
 HEADERS = {
     "x-rapidapi-key": settings.RAPID_KEY,
@@ -19,9 +19,9 @@ async def _fetch_response():
                                params={'sport_id': 3}) as resp:
             if resp.status == 200:
                 data = await resp.json()
-                return Response(status=Status.ACCEPT, data=data, headers=resp.headers)
+                return Response(status=200, data=data, headers=resp.headers)
             elif resp.status == 404:
-                return Response(status=Status.DENIED)
+                return Response(status=404)
             else:
                 return None
 
@@ -34,10 +34,10 @@ async def fetch():
     else:
         if not response:
             logging.warning('Error while "https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues"')
-        elif response.status == Status.ACCEPT:
+        elif response.status == 200:
             if response.data.get('leagues'):
                 return response.data.get('leagues')
-        elif response.status == Status.DENIED:
+        elif response.status == 404:
             logging.warning('DENIED while "https://pinnacle-odds.p.rapidapi.com/kit/v1/leagues"')
 
 

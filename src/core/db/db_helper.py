@@ -14,8 +14,8 @@ class DatabaseHelper:
         url: str,
         echo: bool = False,
         echo_pool: bool = False,
-        pool_size: int = 5,
-        max_overflow: int = 10,
+        pool_size: int = 20,
+        max_overflow: int = 40,
     ):
 
         self.engine: AsyncEngine = create_async_engine(

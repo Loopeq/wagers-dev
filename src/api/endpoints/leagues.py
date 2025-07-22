@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.dependencies import CURRENT_ACTIVE_USER
-from src.core.crud.api.leagues import get_leagues as fetch_leagues
+from src.core.crud.api.base import get_leagues as fetch_leagues
 from src.core.db.db_helper import db_helper
 from src.core.schemas import LeagueDTO
 

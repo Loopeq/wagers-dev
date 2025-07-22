@@ -1,13 +1,16 @@
 import datetime
 from typing import Optional
-from src.core.models import BetTypeEnum, MatchSideEnum
 from pydantic import BaseModel
 from uuid import UUID
+
+from src.core.models import MatchSideEnum
 
 
 class SportDTO(BaseModel):
     id: int
     name: str
+    name_ru: str
+    match_count: int
 
 
 class LeagueDTO(BaseModel):
@@ -24,6 +27,7 @@ class MatchDTO(BaseModel):
 
 class MatchUpcomingDTO(BaseModel):
     id: int
+    sport_id: int
     start_time: datetime.datetime
 
 
@@ -39,11 +43,13 @@ class MatchMemberDTO(MatchMemberAddDTO):
 
 class BetAddDTO(BaseModel):
     match_id: int
-    point: float
+    point: float | None = None
     home_cf: float
     away_cf: float
-    type: BetTypeEnum
+    max_limit: int
+    type: str
     period: int
+    key: str
     created_at: datetime.datetime
     version: Optional[int] = None
 
@@ -59,6 +65,7 @@ class BetChangeAddDTO(BaseModel):
 
 class BaseUser(BaseModel):
     disabled: bool
+    location: str
     superuser: bool
 
 
@@ -77,3 +84,11 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     uuid: UUID | None = None
+
+
+class MatchResultDTO(BaseModel):
+    match_id: int
+    period: int
+    description: str
+    team_1_score: int
+    team_2_score: int

@@ -1,69 +1,102 @@
 import asyncio
 import datetime
-from collections import defaultdict
+import logging
+import time
+
 from src.core.crud.parser.match import get_upcoming_matches
-from src.core.crud.parser.bet import insert_bets
-from src.parser.base import Status
-from src.parser.calls.straight import get_straight_response
-from src.core.models import BetTypeEnum
+from src.core.crud.parser.bet import insert_bets_basketball, insert_bets_tennis, insert_bets_football
+from src.core.utils import format_key
+from src.parser.config import sports
+from src.requests.straight import get_straight_response
 from src.core.schemas import MatchUpcomingDTO, BetAddDTO
-from src.parser.utils.common import gmt_to_utc, calc_coeff
+from src.parser.utils.common import calc_coeff
 
 
-async def collect_content(start, end, parse_allow_types: list):
-    stmd = datetime.timedelta(hours=start) if start else None
-    edmd = datetime.timedelta(hours=end) if end else None
-    matches = await get_upcoming_matches(start_timedelta=stmd, end_timedelta=edmd)
+async def collect_content():
+    matches = await get_upcoming_matches()
+    logging.info(f'Start collecting data for {len(matches)}')
+    response_date = datetime.datetime.utcnow()
+    start = time.time()
+    if matches:
+        stack = []
+        for match in matches:
+            if match.sport_id == sports['basketball']:
+                stack.append(
+                    process_match_basketball(match, response_date)
+                )
+            elif match.sport_id == sports['tennis']:
+                stack.append(
+                    process_match_tennis(match, response_date)
+                )
+            elif match.sport_id == sports['football']:
+                stack.append(process_match_football(match, response_date))
+        await asyncio.gather(*stack)
+    logging.info(f'Finish collecting in {time.time() - start} ')
 
-    completed_matches_count = 0
 
-    async def process_and_count(match):
-        nonlocal completed_matches_count
-        await process_match(match, parse_allow_types=parse_allow_types)
-        completed_matches_count += 1
-
-    tasks = [process_and_count(match) for match in matches]
-
-    if tasks:
-        await asyncio.gather(*tasks)
-    else:
-        pass
-
-
-async def process_match(match: MatchUpcomingDTO, parse_allow_types: list):
-    content_response = await get_straight_response(match_id=match.id)
-    time_now = datetime.datetime.utcnow()
-
-    if content_response.status == Status.DENIED or match.start_time < time_now:
-        return
-
-    headers = content_response.headers
-    data = content_response.data
-    response_date = gmt_to_utc(headers.get('Date'))
+async def extract_bet_content(match: MatchUpcomingDTO, response_date: datetime.datetime):
     bets = []
-    un_touch_type = []
-    un_touch_period = defaultdict(list)
-    for obj in data:
+    seen_bets = set()
+    content_response = await get_straight_response(match_id=match.id)
+    if content_response.status == 404 or match.start_time < response_date:
+        return
+    for obj in content_response.data:
+        if obj.get('isAlternate', True):
+            continue
+        matchupId = obj.get('matchupId')
+        if matchupId != match.id:
+            continue
         w_type = obj.get('type')
         period = obj.get('period')
-        if (w_type not in parse_allow_types
-                or (w_type in un_touch_type and period in un_touch_period.get(w_type))):
+        key = format_key(obj.get('key'))
+
+        bet_key = (
+            w_type,
+            period,
+            key,
+            matchupId
+        )
+        if bet_key in seen_bets:
             continue
+        seen_bets.add(bet_key)
 
-        prices = obj.get('prices')
+        limits = obj.get('limits')[0]
+        limit_max = limits.get('amount')
+        prices = obj.get('prices', [])
+        if len(prices) < 2:
+            continue
         point = prices[0].get('points')
-        home_price = calc_coeff(prices[0].get('price'))
-        away_price = calc_coeff(prices[1].get('price'))
-
-        un_touch_type.append(w_type)
-        un_touch_period[w_type].append(period)
-
+        home_price = calc_coeff(prices[0]['price'])
+        away_price = calc_coeff(prices[1]['price'])
         bets.append(
-            BetAddDTO(match_id=match.id,
-                      point=point,
-                      home_cf=home_price,
-                      away_cf=away_price,
-                      type=BetTypeEnum[w_type],
-                      period=period,
-                      created_at=response_date))
-    await insert_bets(bets=bets, match_id=match.id)
+            BetAddDTO(
+                match_id=match.id,
+                point=point,
+                max_limit=limit_max,
+                home_cf=home_price,
+                away_cf=away_price,
+                type=w_type,
+                period=period,
+                key=key,
+                created_at=response_date,
+            )
+        )
+    return bets
+
+
+async def process_match_basketball(match: MatchUpcomingDTO, response_date: datetime.datetime):
+    bets = await extract_bet_content(match, response_date)
+    if bets:
+        await insert_bets_basketball(bets=bets, match_id=match.id)
+
+
+async def process_match_tennis(match: MatchUpcomingDTO, response_date: datetime.datetime):
+    bets = await extract_bet_content(match, response_date)
+    if bets:
+        await insert_bets_tennis(bets=bets)
+
+
+async def process_match_football(match: MatchUpcomingDTO, response_date: datetime.datetime):
+    bets = await extract_bet_content(match, response_date)
+    if bets:
+        await insert_bets_tennis(bets=bets)
