@@ -1,8 +1,8 @@
+import itertools
+import logging
+
 from webshare import ApiClient
 from src.core.settings import settings as conf
-
-_CLIENT = ApiClient(conf.WEBSHARE_API)
-_PROXIES = _CLIENT.get_proxy_list().get_results()
 
 
 class NoValidProxyError(Exception):
@@ -15,32 +15,16 @@ class ProxyManager:
     _SCHEMA = 'http://{0}:{1}@{2}:{3}'
 
     def __init__(self):
-        self._proxy_list = _PROXIES
-        self._current_id = 0
+        self._client = ApiClient(conf.WEBSHARE_API)
+        self._proxy_list = self._client.get_proxy_list().get_results()
 
-    def _fetch_proxy(self):
-        return self._proxy_list[self._current_id]
+        if not self._proxy_list:
+            logging.error("No proxies available from WebShare API")
+
+        self._proxy_cycle = itertools.cycle(self._proxy_list)
+        self._current_proxy = next(self._proxy_cycle)
 
     @property
     def proxy(self) -> str:
-
-        proxy = self._fetch_proxy()
-        proxy_list_length = len(self._proxy_list)
-
-        while not proxy.valid:
-            self._current_id += 1
-            if self._current_id == proxy_list_length - 1:
-                raise NoValidProxyError('All of your proxies are invalid')
-            proxy = self._fetch_proxy()
-
-        return self._SCHEMA.format(proxy.username,
-                                   proxy.password,
-                                   proxy.proxy_address,
-                                   proxy.port)
-
-    def update(self):
-        if self._current_id == len(self._proxy_list) - 1:
-            self._current_id = 0
-        else:
-            self._current_id += 1
-
+        proxy = next(self._proxy_cycle)
+        return self._SCHEMA.format(proxy.username, proxy.password, proxy.proxy_address, proxy.port)

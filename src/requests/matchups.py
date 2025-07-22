@@ -1,4 +1,4 @@
-from src.parser.base import get_request
+from src.requests.base import get_request
 
 HEADERS = {
     'sec-ch-ua': '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',
@@ -13,13 +13,15 @@ HEADERS = {
     'sec-ch-ua-platform': '"Linux"',
 }
 
+PARAMS = {
+    'withSpecials': 'false',
+    'brandId': '0',
+}
 
-"""! NEED TO FORMAT !"""
-URL = 'https://guest.api.arcadia.pinnacle.com/0.1/matchups/{0}/markets/related/straight'
+URL = 'https://guest.api.arcadia.pinnacle.com/0.1/sports/{0}/matchups'
 
 
-async def get_straight_response(match_id: int):
-    response = await get_request(url=URL.format(match_id), headers=HEADERS)
+async def get_match_up_response(event_id: int):
+    response = await get_request(url=URL.format(event_id), headers=HEADERS)
     return response
-
 

@@ -20,11 +20,6 @@ updated_at = Annotated[datetime.datetime, mapped_column(
     )]
 
 
-class BetTypeEnum(enum.Enum):
-    total = 'total'
-    spread = 'spread'
-
-
 class MatchResultEnum(enum.Enum):
     win = 'win'
     lose = 'lose'
@@ -57,8 +52,22 @@ class Match(Base):
     __tablename__ = 'match'
 
     id: Mapped[intpk] = mapped_column(autoincrement=False)
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey('match.id'), nullable=True, index=True)
     league_id: Mapped[int] = mapped_column(ForeignKey('league.id'), nullable=False)
     start_time: Mapped[datetime.datetime] = mapped_column(nullable=False, index=True)
+    created_at: Mapped[created_at]
+
+
+class Team(Base):
+    __tablename__ = "team"
+
+    id: Mapped[intpk]
+    name: Mapped[str_64] = mapped_column(nullable=False)
+    league_id: Mapped[int] = mapped_column(ForeignKey('league.id', ondelete='CASCADE'), nullable=False, index=True)
+
+    __table_args__ = (
+        UniqueConstraint('name', 'league_id', name='uq_team_combination'),
+    )
 
 
 class MatchMember(Base):
@@ -66,13 +75,11 @@ class MatchMember(Base):
 
     id: Mapped[intpk]
     match_id: Mapped[int] = mapped_column(ForeignKey('match.id', ondelete='CASCADE'), nullable=False, index=True)
-    name: Mapped[str_64] = mapped_column(nullable=False)
-    status: Mapped[MatchResultEnum] = mapped_column(nullable=True)
-    side: Mapped[MatchSideEnum] = mapped_column(nullable=False)
+    home_id: Mapped[int] = mapped_column(ForeignKey('team.id', ondelete='CASCADE'), nullable=False, index=True)
+    away_id: Mapped[int] = mapped_column(ForeignKey('team.id', ondelete='CASCADE'), nullable=False, index=True)
 
     __table_args__ = (
-        UniqueConstraint('match_id', 'side', name='uq_match_combination'),
-        Index('ix_match_member_match_id_side', 'match_id', 'side')
+        UniqueConstraint('match_id', 'home_id', 'away_id', name='uq_match_member_combination'),
     )
 
 
@@ -81,13 +88,18 @@ class Bet(Base):
 
     id: Mapped[intpk]
     match_id: Mapped[int] = mapped_column(ForeignKey('match.id', ondelete='CASCADE'), nullable=False, index=True)
-    point: Mapped[float] = mapped_column(nullable=False)
+    point: Mapped[float] = mapped_column(nullable=True)
+    limit: Mapped[int] = mapped_column(nullable=False, default=0)
     home_cf: Mapped[float] = mapped_column(nullable=False)
     away_cf: Mapped[float] = mapped_column(nullable=False)
-    type: Mapped[BetTypeEnum] = mapped_column(nullable=False)
+    type: Mapped[str] = mapped_column(nullable=False)
     period: Mapped[int] = mapped_column(nullable=False)
+    key: Mapped[str] = mapped_column(nullable=False)
     version: Mapped[int] = mapped_column(nullable=False, default=1)
     created_at: Mapped[datetime.datetime] = mapped_column(nullable=False, index=True)
+    __table_args__ = (
+        Index('idx_bet_latest_version', 'match_id', 'type', 'period', 'version', postgresql_ops={'version': 'desc'}),
+    )
 
 
 class User(Base):
@@ -109,7 +121,13 @@ class MatchResult(Base):
     id: Mapped[intpk]
     match_id: Mapped[int] = mapped_column(ForeignKey('match.id', ondelete='CASCADE'), nullable=False, index=True)
     period: Mapped[int] = mapped_column(nullable=False, index=True)
+    description: Mapped[str] = mapped_column(nullable=False, index=True)
     team_1_score: Mapped[int] = mapped_column(nullable=False)
     team_2_score: Mapped[int] = mapped_column(nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('match_id', 'period', name='uq_match_result_combination'),
+    )
+
 
 

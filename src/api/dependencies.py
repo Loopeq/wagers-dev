@@ -3,6 +3,7 @@ from typing import Annotated
 import jwt
 from fastapi import Depends, HTTPException
 from jwt import InvalidTokenError
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
