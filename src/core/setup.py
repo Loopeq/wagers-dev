@@ -18,7 +18,7 @@ def create_application(router: APIRouter, **kwargs: Any) -> FastAPI:
     origins = [
         "https://www.swaeger.com",
         "https://swaeger.com",
-        "http://87.228.114.236:8080",
+        "https://spredly.ru",
     ]
     if settings.DEV == '1':
         for port in range(8010, 8200):
