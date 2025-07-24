@@ -17,9 +17,11 @@ async def get_related(current_user: CURRENT_ACTIVE_USER,
                       finished: bool | None = False,
                       nulls: bool | None = False,
                       sort_by: str | None = "team_name",
-                      sort_order: str | None = "ASC"):
+                      sort_order: str | None = "ASC",
+                      offset: int | None = None,
+                      limit: int | None = None):
     match_counts = await get_upcoming_match_counts_by_sport(session=session)
     matches = await fetch_matches(session=session, sport_id=sport_id, league_id=league_id,
                                   hours=hours, finished=finished, nulls=nulls,
                                   sort_by=sort_by, sort_order=sort_order)
-    return {"matches": matches, "match_counts": match_counts}
+    return {"matches": matches[offset: offset + limit], "match_counts": match_counts}
