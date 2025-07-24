@@ -14,6 +14,8 @@ services:
     volumes:
       - ./src:/code/src
       - .env:/code/.env
+    networks:
+      - web
 
   db:
     image: postgres:16
@@ -28,6 +30,8 @@ services:
       interval: 2s
       timeout: 5s
       retries: 10
+    networks:
+      - web
 
   pgadmin:
    container_name: pgadmin4
@@ -45,6 +49,9 @@ services:
      web:
        condition: service_started
    attach: false
+   networks:
+      - web
+
 
   parser:
     build:
@@ -62,6 +69,9 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - ./src:/code/src
+    networks:
+      - web
+
 
   initial_script:
      build:
@@ -77,8 +87,13 @@ services:
      command: python -m src.scripts.init_script
      volumes:
        - ./src:/code/src
-
+     networks:
+      - web
 
 volumes:
   postgres-data:
   pgadmin-data:
+
+networks:
+  web:
+    external: true
