@@ -85,10 +85,11 @@ async def get_initial_last_points(match_id: int, session: AsyncSession):
         select(
             Bet.period,
             Bet.type,
+            Bet.key,
             func.max(Bet.version).label("max_version")
         )
         .filter(Bet.match_id == match_id, Bet.version != 0)
-        .group_by(Bet.period, Bet.type)
+        .group_by(Bet.period, Bet.type, Bet.key)
         .subquery()
     )
 
@@ -125,13 +126,14 @@ async def get_initial_last_points(match_id: int, session: AsyncSession):
 
     grouped_bets = {}
     for bet in bets:
-        key = (bet["period"], bet["type"])
+        key = (bet["period"], bet["type"], bet["key"])
         if key not in grouped_bets:
             grouped_bets[key] = []
         grouped_bets[key].append(bet)
 
     result_array = []
     for key, bet_list in grouped_bets.items():
+        bet_list.sort(key=lambda x: x["version"])
         if len(bet_list) == 2:
             result_array.append((bet_list[0], bet_list[1]))
         elif len(bet_list) == 1:

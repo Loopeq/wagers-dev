@@ -4,7 +4,7 @@ import logging
 import time
 
 from src.core.crud.parser.match import get_upcoming_matches
-from src.core.crud.parser.bet import insert_bets_basketball, insert_bets_tennis, insert_bets_football
+from src.core.crud.parser.bet import insert_bets_points, insert_bets_coeffs
 from src.core.utils import format_key
 from src.parser.config import sports
 from src.requests.straight import get_straight_response
@@ -49,23 +49,26 @@ async def extract_bet_content(match: MatchUpcomingDTO, response_date: datetime.d
         w_type = obj.get('type')
         period = obj.get('period')
         key = format_key(obj.get('key'))
-
+        # для team_total
+        if w_type == 'team_total':
+            side = obj.get('key').split(';')[-1]
+            key += side
         bet_key = (
             w_type,
             period,
             key,
             matchupId
         )
+        prices = obj.get('prices', [])
+        if len(prices) < 2:
+            continue
+        point = prices[0].get('points')
         if bet_key in seen_bets:
             continue
         seen_bets.add(bet_key)
 
         limits = obj.get('limits')[0]
         limit_max = limits.get('amount')
-        prices = obj.get('prices', [])
-        if len(prices) < 2:
-            continue
-        point = prices[0].get('points')
         home_price = calc_coeff(prices[0]['price'])
         away_price = calc_coeff(prices[1]['price'])
         bets.append(
@@ -87,16 +90,16 @@ async def extract_bet_content(match: MatchUpcomingDTO, response_date: datetime.d
 async def process_match_basketball(match: MatchUpcomingDTO, response_date: datetime.datetime):
     bets = await extract_bet_content(match, response_date)
     if bets:
-        await insert_bets_basketball(bets=bets, match_id=match.id)
+        await insert_bets_points(bets=bets, match_id=match.id)
 
 
 async def process_match_tennis(match: MatchUpcomingDTO, response_date: datetime.datetime):
     bets = await extract_bet_content(match, response_date)
     if bets:
-        await insert_bets_tennis(bets=bets)
+        await insert_bets_coeffs(bets=bets)
 
 
 async def process_match_football(match: MatchUpcomingDTO, response_date: datetime.datetime):
     bets = await extract_bet_content(match, response_date)
     if bets:
-        await insert_bets_tennis(bets=bets)
+        await insert_bets_coeffs(bets=bets)

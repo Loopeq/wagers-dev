@@ -9,7 +9,7 @@ def process_changes(bets: list[dict], sport_id: int, interval: int):
 def group_bets(mapped_changes: list[dict[str]]) -> list[list[dict[str]]]:
     grouped_changes = defaultdict(list)
     for change in mapped_changes:
-        key = (change['period'], change['type'], change['relation_type'])
+        key = (change['period'], change['type'], change['relation_type'], change['key'])
         grouped_changes[key].append(change)
 
     all_pairs = []
