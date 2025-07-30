@@ -135,6 +135,7 @@ async def insert_bets_coeffs(bets: List[BetAddDTO]):
             session.add_all(new_bets)
             await session.commit()
 
+
 def create_bet(match_id: int, bet: BetAddDTO, version: int, created_at: datetime) -> Bet:
     return Bet(
             match_id=match_id,
@@ -148,3 +149,11 @@ def create_bet(match_id: int, bet: BetAddDTO, version: int, created_at: datetime
             key=bet.key,
             created_at=created_at
     )
+
+async def get_event_bets(match_id: int):
+    async with db_helper.session_factory() as session:
+        stmt = select(Bet).filter(Bet.match_id == match_id, Bet.point.is_not(None)).order_by(Bet.version.desc())
+        result = await session.execute(stmt)
+        bets = result.scalars().all()
+        return bets
+

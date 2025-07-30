@@ -1,7 +1,6 @@
 from collections import defaultdict
 from typing import Annotated, List
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.utils import get_period_title
@@ -57,7 +56,10 @@ async def get_straight_changes(
         match_id: int,
         child_id: int | None = None,
 ):
-    match = await get_match(match_id=match_id, session=session)
+    try:
+        match = await get_match(match_id=match_id, session=session)
+    except:
+        raise HTTPException(404, detail='Not found')
     match_ids = [match_id, child_id]
     changes = await get_changes(match_ids=match_ids, session=session, periods=[])
     mapped_changes = []
