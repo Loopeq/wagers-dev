@@ -4,13 +4,18 @@ import logging
 import time
 
 from src.core.crud.parser.match import get_upcoming_matches
-from src.core.crud.parser.bet import insert_bets_points, insert_bets_coeffs
+from src.core.crud.parser.bet import insert_bets_points, insert_bets_coeffs, get_event_bets
 from src.core.utils import format_key
-from src.parser.config import sports
+from src.parser.config import sports, sports_ids
 from src.requests.straight import get_straight_response
 from src.core.schemas import MatchUpcomingDTO, BetAddDTO
 from src.parser.utils.common import calc_coeff
+from src.scripts.bet_clusters import extract_latest, is_int_or_half
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 async def collect_content():
     matches = await get_upcoming_matches()
@@ -38,11 +43,11 @@ async def extract_bet_content(match: MatchUpcomingDTO, response_date: datetime.d
     bets = []
     seen_bets = set()
     content_response = await get_straight_response(match_id=match.id)
+    all_event_bets = await get_event_bets(match_id=match.id)
+    latest_bets = extract_latest(all_event_bets)
     if content_response.status == 404 or match.start_time < response_date:
         return
     for obj in content_response.data:
-        if obj.get('isAlternate', True):
-            continue
         matchupId = obj.get('matchupId')
         if matchupId != match.id:
             continue
@@ -63,9 +68,27 @@ async def extract_bet_content(match: MatchUpcomingDTO, response_date: datetime.d
         if len(prices) < 2:
             continue
         point = prices[0].get('points')
-        if bet_key in seen_bets:
-            continue
-        seen_bets.add(bet_key)
+
+        if sports_ids.get(match.sport_id) in ['football', 'tennis']:
+            if bet_key in seen_bets:
+                continue
+
+            if point is None:
+                seen_bets.add(bet_key)
+            else:
+                latest = latest_bets.get(key)
+                if not is_int_or_half(point):
+                    continue
+                if latest:
+                    if latest.point != point:
+                        continue
+                seen_bets.add(bet_key)
+        else:
+            if obj.get('isAlternate', True):
+                continue
+            if bet_key in seen_bets:
+                continue
+            seen_bets.add(bet_key)
 
         limits = obj.get('limits')[0]
         limit_max = limits.get('amount')

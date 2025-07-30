@@ -1,7 +1,10 @@
 from collections import defaultdict
 
+from src.core.models import Bet
+from src.core.schemas import BetAddDTO
 
-def process_changes(bets: list[dict], sport_id: int, interval: int):
+
+def process_changes(bets: list[dict]):
     bets = list(bets.__reversed__())
     return bets
 
@@ -31,3 +34,17 @@ def group_bets(mapped_changes: list[dict[str]]) -> list[list[dict[str]]]:
 
     return all_pairs_sorted
 
+
+def extract_latest(bets: list[Bet]):
+    if not bets:
+        return {}
+
+    bet_key_mapper = {}
+    for bet in sorted(bets, key=lambda bet: bet.version):
+        bet_key_mapper[bet.key] = bet
+
+    return bet_key_mapper
+
+
+def is_int_or_half(number: int | float):
+    return float(number * 2).is_integer()
