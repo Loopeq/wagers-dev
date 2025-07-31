@@ -4,15 +4,6 @@ import logging
 import time
 
 from src.core.crud.parser.match import get_upcoming_matches
-<<<<<<< HEAD
-from src.core.crud.parser.bet import insert_bets_points, insert_bets_coeffs
-from src.core.utils import format_key
-from src.parser.config import sports
-from src.requests.straight import get_straight_response
-from src.core.schemas import MatchUpcomingDTO, BetAddDTO
-from src.parser.utils.common import calc_coeff
-
-=======
 from src.core.crud.parser.bet import insert_bets_points, insert_bets_coeffs, get_event_bets
 from src.core.utils import format_key
 from src.parser.config import sports, sports_ids
@@ -25,7 +16,6 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
->>>>>>> 0822febcbde5ae6dff62c215049ede1849caf0a2
 
 async def collect_content():
     matches = await get_upcoming_matches()
@@ -53,19 +43,11 @@ async def extract_bet_content(match: MatchUpcomingDTO, response_date: datetime.d
     bets = []
     seen_bets = set()
     content_response = await get_straight_response(match_id=match.id)
-<<<<<<< HEAD
-    if content_response.status == 404 or match.start_time < response_date:
-        return
-    for obj in content_response.data:
-        if obj.get('isAlternate', True):
-            continue
-=======
     all_event_bets = await get_event_bets(match_id=match.id)
     latest_bets = extract_latest(all_event_bets)
     if content_response.status == 404 or match.start_time < response_date:
         return
     for obj in content_response.data:
->>>>>>> 0822febcbde5ae6dff62c215049ede1849caf0a2
         matchupId = obj.get('matchupId')
         if matchupId != match.id:
             continue
@@ -86,11 +68,6 @@ async def extract_bet_content(match: MatchUpcomingDTO, response_date: datetime.d
         if len(prices) < 2:
             continue
         point = prices[0].get('points')
-<<<<<<< HEAD
-        if bet_key in seen_bets:
-            continue
-        seen_bets.add(bet_key)
-=======
 
         if sports_ids.get(match.sport_id) in ['football', 'tennis']:
             if bet_key in seen_bets:
@@ -112,8 +89,6 @@ async def extract_bet_content(match: MatchUpcomingDTO, response_date: datetime.d
             if bet_key in seen_bets:
                 continue
             seen_bets.add(bet_key)
->>>>>>> 0822febcbde5ae6dff62c215049ede1849caf0a2
-
         limits = obj.get('limits')[0]
         limit_max = limits.get('amount')
         home_price = calc_coeff(prices[0]['price'])
