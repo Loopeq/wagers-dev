@@ -1,3 +1,4 @@
+import math
 from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,4 +25,8 @@ async def get_related(current_user: CURRENT_ACTIVE_USER,
     matches = await fetch_matches(session=session, sport_id=sport_id, league_id=league_id,
                                   hours=hours, finished=finished, nulls=nulls,
                                   sort_by=sort_by, sort_order=sort_order)
-    return {"matches": matches[offset: offset + limit], "match_counts": match_counts}
+    pagination = {
+        'pages': math.ceil(len(matches) / limit),
+        'current_page': offset // limit + 1
+    }
+    return {"matches": matches[offset: offset + limit], "match_counts": match_counts, "pagination": pagination}

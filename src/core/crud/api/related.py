@@ -16,14 +16,14 @@ async def get_upcoming_match_counts_by_sport(session: AsyncSession):
         League.sport_id,
         func.count(distinct(Match.id)).label("upcoming_matches_with_changes")
     ).outerjoin(Match, League.id == Match.league_id) \
-     .outerjoin(bet_match, or_(bet_match.id == Match.id, bet_match.parent_id == Match.id)) \
-     .outerjoin(bet, bet.match_id == bet_match.id) \
-     .filter(
-         Match.start_time > utc_now,
-         Match.parent_id.is_(None),
-         bet.version >= 1
-     ) \
-     .group_by(League.sport_id)
+        .outerjoin(bet_match, or_(bet_match.id == Match.id, bet_match.parent_id == Match.id)) \
+        .outerjoin(bet, bet.match_id == bet_match.id) \
+        .filter(
+        Match.start_time > utc_now,
+        Match.parent_id.is_(None),
+        bet.version >= 1
+    ) \
+        .group_by(League.sport_id)
 
     result = await session.execute(query)
     result = result.fetchall()
@@ -46,7 +46,7 @@ async def get_matches(session: AsyncSession,
     bet_match = aliased(Match)
     bet = aliased(Bet)
     count_case = func.count(case((bet.version >= 1, bet.id), else_=None))
-    last_update = func.max(bet.created_at)
+    last_update = func.max(bet.created_at).filter(bet.version >= 1)
     query = select(Match.id, Match.start_time,
                    League.name,
                    count_case.label('change_count'),
