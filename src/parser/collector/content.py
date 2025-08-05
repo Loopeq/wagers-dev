@@ -17,6 +17,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+
 async def collect_content():
     matches = await get_upcoming_matches()
     logging.info(f'Start collecting data for {len(matches)}')

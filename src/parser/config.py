@@ -14,6 +14,6 @@ sports_ids = {value: key for key, value in sports.items()}
 sports_ru = config['sports_ru']
 parse_headers = config["parse_headers"]
 parse_results = config["parse_results"]
-clean_changes_d = config["clean_changes_d"]
-clean_matches_d = config["clean_matches_d"]
+clear_threshold = config["clear_threshold"]
+clear_interval = config["clear_interval"]
 

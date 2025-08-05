@@ -11,8 +11,8 @@
   },
   "parse_headers": 30,
   "parse_results": 1440,
-  "clean_changes_d": 1,
-  "clean_matches_d": 5,
+  "clear_threshold": 5,
+  "clear_interval": 1,
   "accuracy": {
     "hour": 1,
     "far": 2,

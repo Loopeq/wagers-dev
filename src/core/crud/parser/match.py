@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
 from typing import List
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.dialects.postgresql import insert
 from src.core.db.db_helper import db_helper
 from src.core.models import Match, League, MatchMember, Team, MatchResult
 from src.core.schemas import MatchUpcomingDTO, MatchResultDTO
 import logging
+
+from src.parser.config import clear_threshold, sports
 
 
 async def check_exist(ids: list):
@@ -107,3 +109,22 @@ async def add_match_results(match_results: List[MatchResultDTO]):
 
         await session.execute(stmt)
         await session.commit()
+
+
+async def clear_events_by_start_time():
+    async with db_helper.session_factory() as session:
+        current_time = datetime.utcnow()
+        subquery = (
+            select(Match.id)
+            .join(League, Match.league_id == League.id)
+            .where(
+                Match.start_time < current_time - timedelta(days=int(clear_threshold)),
+                League.sport_id != sports['tennis']
+            )
+        )
+
+        stmt = delete(Match).where(Match.id.in_(subquery))
+        await session.execute(stmt)
+
+        await session.commit()
+
