@@ -34,7 +34,7 @@ async def collect_heads_data(data: list[dict], sport_name: str):
         parent = event.get("parent")
 
         # Исключаю все дочерний матчи для футбола и тениса
-        if sport_name.lower() in ['football', 'tennis'] and parent:
+        if sport_name.lower() in ['football'] and parent:
             continue
         if parent and parent.get("id") not in event_by_id:
             skipped_due_to_parent += 1

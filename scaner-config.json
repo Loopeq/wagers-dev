@@ -9,6 +9,7 @@
     "tennis": "Теннис",
     "football": "Футбол"
   },
+  "tennis_threshold": 0.15,
   "parse_headers": 30,
   "parse_results": 1440,
   "clear_threshold": 5,

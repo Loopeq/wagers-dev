@@ -69,7 +69,9 @@ async def extract_bet_content(match: MatchUpcomingDTO, response_date: datetime.d
         if len(prices) < 2:
             continue
         point = prices[0].get('points')
-
+        if sports_ids.get(match.sport_id) in ['tennis'] and match.parent_id:
+            if key not in ['s;0;ou']:
+                continue
         if sports_ids.get(match.sport_id) in ['football', 'tennis']:
             if bet_key in seen_bets:
                 continue

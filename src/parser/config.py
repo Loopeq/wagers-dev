@@ -16,4 +16,6 @@ parse_headers = config["parse_headers"]
 parse_results = config["parse_results"]
 clear_threshold = config["clear_threshold"]
 clear_interval = config["clear_interval"]
+tennis_threshold = config["tennis_threshold"]
+
 

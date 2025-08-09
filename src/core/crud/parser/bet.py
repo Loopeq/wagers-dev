@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 
 from sqlalchemy import select
-
+from src.parser.config import tennis_threshold 
 from src.core.schemas import BetAddDTO
 from src.core.db.db_helper import db_helper
 from src.core.models import Bet
@@ -102,7 +102,7 @@ async def insert_bets_coeffs(bets: List[BetAddDTO]):
             if existing_bet:
                 # Берем меньшее изменение по abs
                 minimum = min(abs(existing_bet.home_cf - bet.home_cf), abs(existing_bet.away_cf - bet.away_cf))
-                changes = minimum >= 0.15
+                changes = minimum >= tennis_threshold
 
                 if changes:
                     new_bets.append(Bet(

@@ -20,11 +20,13 @@ class Response:
     headers: Optional[dict] = None
 
 
-async def get_request(url: str, headers: dict, params: dict = None) -> Response:
+async def get_request(url: str, headers: dict, params: dict = None, cookies: dict = None, use_proxy: bool = True) -> Response:
     connector = TCPConnector(limit=2000)
-    async with aiohttp.ClientSession(connector=connector) as session:
+    async with aiohttp.ClientSession(connector=connector, cookies=cookies) as session:
         for _ in range(max_retries):
-            proxy = pm.proxy
+            proxy = None
+            if use_proxy:
+                proxy = pm.proxy
             try:
                 async with session.get(url,
                                        headers=headers,

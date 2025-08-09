@@ -142,58 +142,6 @@ async def get_initial_last_points(match_id: int, session: AsyncSession):
     return {"comparison": result_array}
 
 
-async def get_leagues(sport_id: int, session: AsyncSession):
-    stmt = select(League.id, League.name, func.count(distinct(Team.id)).label('teams_count'),
-                  func.count(distinct(Match.id)).label('match_count')) \
-        .outerjoin(Team, Team.league_id == League.id) \
-        .outerjoin(Match, Match.league_id == League.id) \
-        .filter(League.sport_id == sport_id) \
-        .group_by(League.id, League.name) \
-        .order_by(League.name)
-    request = await session.execute(stmt)
-    result = request.fetchall()
-    return [{"league_id": row[0],
-             "league_name": row[1],
-             "team_total": row[2],
-             "match_count": row[3],
-             } for row in result]
-
-
-async def get_teams(sport_id: int, league_id: int | None, session: AsyncSession):
-    stmt = (
-        select(
-            Team.id,
-            Team.name,
-            Team.league_id,
-            func.count(distinct(MatchMember.id)).label("match_count"),
-        )
-        .outerjoin(League, League.id == Team.league_id)
-        .outerjoin(
-            MatchMember,
-            or_(
-                MatchMember.home_id == Team.id,
-                MatchMember.away_id == Team.id
-            )
-        )
-        .filter(League.sport_id == sport_id)
-        .group_by(Team.id, Team.name, Team.league_id)
-        .order_by(Team.name)
-    )
-    if league_id:
-        stmt = stmt.filter(Team.league_id == league_id)
-    result = await session.execute(stmt)
-    teams = [
-        {
-            "id": row[0],
-            "name": row[1],
-            "league_id": row[2],
-            "match_count": row[3],
-        }
-        for row in result
-    ]
-    return teams
-
-
 async def get_team_games(team_id: int, current_match_id: int, session: AsyncSession):
     HomeTeam = aliased(Team)
     AwayTeam = aliased(Team)
@@ -262,26 +210,3 @@ async def get_team_games(team_id: int, current_match_id: int, session: AsyncSess
         }
         for row in rows
     ]
-
-
-async def get_search_items(query: str, sport_id: int, session: AsyncSession):
-    stmt_leagues = select(League).where(
-        League.sport_id == sport_id,
-        League.name.ilike(f"%{query}%")
-    )
-
-    stmt_teams = select(Team).join(League).where(
-        League.sport_id == sport_id,
-        Team.name.ilike(f"%{query}%")
-    )
-
-    result_leagues = await session.execute(stmt_leagues)
-    result_teams = await session.execute(stmt_teams)
-
-    leagues = result_leagues.scalars().all()
-    teams = result_teams.scalars().all()
-
-    return {
-        "leagues": leagues,
-        "teams": teams
-    }

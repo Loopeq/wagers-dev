@@ -28,6 +28,7 @@ class MatchDTO(BaseModel):
 class MatchUpcomingDTO(BaseModel):
     id: int
     sport_id: int
+    parent_id: int | None = None
     start_time: datetime.datetime
 
 
