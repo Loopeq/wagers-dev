@@ -7,7 +7,6 @@ from src.core.db.db_helper import db_helper
 from src.core.models import Match, League, MatchMember, Team, MatchResult
 from src.core.schemas import MatchUpcomingDTO, MatchResultDTO
 import logging
-
 from src.parser.config import clear_threshold, sports
 
 

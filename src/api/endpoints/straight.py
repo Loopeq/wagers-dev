@@ -7,16 +7,10 @@ from src.core.utils import get_period_title
 from src.api.dependencies import CURRENT_ACTIVE_USER
 from src.core.crud.api.straight import get_changes, get_initial_last_points, get_match
 from src.core.db.db_helper import db_helper
-import logging
 
 from src.scripts.bet_clusters import group_bets
 
 router = APIRouter(prefix="/straight", tags=["Straight"])
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
 
 
 class Period(BaseModel):

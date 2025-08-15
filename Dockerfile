@@ -7,7 +7,7 @@ RUN pip install poetry
 RUN poetry self add poetry-plugin-export
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-FROM python:3.11
+FROM python:3.11-bullseye
 
 WORKDIR /code
 
@@ -15,5 +15,8 @@ RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/ap
 COPY --from=requirements-stage /tmp/requirements.txt /code/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 COPY . .
+
+RUN python -m playwright install-deps
+RUN python -m playwright install
 
 RUN chmod +x /code/entrypoint.sh

@@ -28,3 +28,12 @@ class ProxyManager:
     def proxy(self) -> str:
         proxy = next(self._proxy_cycle)
         return self._SCHEMA.format(proxy.username, proxy.password, proxy.proxy_address, proxy.port)
+
+    @property
+    def proxy_object(self) -> dict:
+        proxy = next(self._proxy_cycle)
+        return {
+            'server': f'http://{proxy.proxy_address}:{proxy.port}',
+            'username': proxy.username,
+            'password': proxy.password,
+        }

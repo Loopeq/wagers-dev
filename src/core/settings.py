@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     FIRST_USER_UUID: UUID = os.environ.get('FIRST_USER_UUID')
     FIRST_USER_PASSWORD: str = os.environ.get('FIRST_USER_PASSWORD')
 
+    #pinnacle
+    PINNACLE_LOG: str = os.environ.get('PINNACLE_LOG')
+    PINNACLE_PASS: str = os.environ.get('PINNACLE_PASS')
+    
     @property
     def DATABASE_URL(self):
         return (f"postgresql+asyncpg://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}@{os.environ['DB_HOST']}:"

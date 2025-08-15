@@ -1,8 +1,6 @@
 import asyncio
 import datetime
-import logging
-import time
-
+from src.core.logger import get_module_logger
 from src.core.crud.parser.match import get_upcoming_matches
 from src.core.crud.parser.bet import insert_bets_points, insert_bets_coeffs, get_event_bets
 from src.core.utils import format_key
@@ -12,17 +10,11 @@ from src.core.schemas import MatchUpcomingDTO, BetAddDTO
 from src.parser.utils.common import calc_coeff
 from src.scripts.bet_clusters import extract_latest, is_int_or_half
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
+logger = get_module_logger(__name__)
 
 async def collect_content():
     matches = await get_upcoming_matches()
-    logging.info(f'Start collecting data for {len(matches)}')
     response_date = datetime.datetime.utcnow()
-    start = time.time()
     if matches:
         stack = []
         for match in matches:
@@ -37,7 +29,6 @@ async def collect_content():
             elif match.sport_id == sports['football']:
                 stack.append(process_match_football(match, response_date))
         await asyncio.gather(*stack)
-    logging.info(f'Finish collecting in {time.time() - start} ')
 
 
 async def extract_bet_content(match: MatchUpcomingDTO, response_date: datetime.datetime):

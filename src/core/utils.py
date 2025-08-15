@@ -1,9 +1,7 @@
-import logging
-
 from passlib.context import CryptContext
-
 from src.core.constants import PERIODS
 from src.parser.config import sports_ids
+from datetime import timedelta, datetime
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -26,3 +24,8 @@ def get_period_title(sport_id: int, key: str, relation: str | None):
     if relation:
         sport = sport.get(relation)
     return sport.get(key)
+
+def get_yesterday_ymd():
+    yesterday_utc = datetime.utcnow() - timedelta(days=1)
+    formatted = yesterday_utc.strftime('%Y-%m-%d')
+    return formatted

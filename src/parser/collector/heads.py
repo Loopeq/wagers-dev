@@ -1,12 +1,13 @@
 import asyncio
 import datetime
-import logging
 from collections import defaultdict, deque
 from src.requests.matchups import get_match_up_response
 from src.core.models import League, Match, Team
 from src.parser.utils.common import iso_to_utc
 from src.core.crud.parser.match import check_exist, add_match_cascade
+from src.core.logger import get_module_logger
 
+logger = get_module_logger(__name__)
 
 def accept_match_condition(event: dict, now_date: datetime.datetime) -> bool:
     return (
@@ -17,14 +18,12 @@ def accept_match_condition(event: dict, now_date: datetime.datetime) -> bool:
 
 
 async def collect_heads_data(data: list[dict], sport_name: str):
-    logging.info(f"Start collecting {len(data)} matches for {sport_name}")
     now_date = datetime.datetime.utcnow()
 
     filtered_events = [
         event for event in data
         if accept_match_condition(event, now_date)
     ]
-    logging.info(f"{len(filtered_events)} из {len(data)} матчей прошли базовый фильтр")
 
     event_by_id = {event["id"]: event for event in filtered_events}
 
@@ -38,11 +37,9 @@ async def collect_heads_data(data: list[dict], sport_name: str):
             continue
         if parent and parent.get("id") not in event_by_id:
             skipped_due_to_parent += 1
-            logging.warning(f"Матч {event['id']} пропущен — родитель {parent['id']} не найден в выборке")
             continue
         valid_events.append(event)
 
-    logging.info(f"{len(valid_events)} матчей осталось после фильтрации родителей ({skipped_due_to_parent} пропущено)")
 
     event_by_id = {event["id"]: event for event in valid_events}
     existing_match_ids = await check_exist(list(event_by_id.keys()))
@@ -72,20 +69,13 @@ async def collect_heads_data(data: list[dict], sport_name: str):
             if indegree[child_id] == 0:
                 queue.append(child_id)
 
-    if len(sorted_ids) < len(event_by_id):
-        skipped_ids = set(event_by_id) - set(sorted_ids)
-        logging.warning(f"Циклическая зависимость между матчами. Пропущено {len(skipped_ids)} матчей: {skipped_ids}")
-
     inserted = 0
     for match_id in sorted_ids:
         event = event_by_id[match_id]
         try:
             inserted += await process_match(event, existing_match_ids)
         except Exception as e:
-            logging.error(f"Ошибка при обработке матча {match_id}: {e}")
-
-    logging.info(f"Finished collecting {inserted} matches for {sport_name}")
-
+            logger.error(f"Process match error {match_id}: {e}")
 
 async def process_match(event: dict, existing_ids: list) -> int:
     match_id = event["id"]

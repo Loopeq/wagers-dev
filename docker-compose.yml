@@ -14,6 +14,11 @@ services:
     volumes:
       - ./src:/code/src
       - .env:/code/.env
+      - ./logs:/code/logs
+      - ./playwright:/code/playwright
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=ERROR
     networks:
       - web
 
@@ -30,6 +35,9 @@ services:
       interval: 2s
       timeout: 5s
       retries: 10
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=ERROR
     networks:
       - web
 
@@ -49,6 +57,9 @@ services:
      web:
        condition: service_started
    attach: false
+   environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=ERROR
    networks:
       - web
 
@@ -67,8 +78,11 @@ services:
     command: [ "python", "-u", "-m", "src.parser.parser" ]
     environment:
       - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=ERROR
     volumes:
       - ./src:/code/src
+      - ./logs:/code/logs
+      - ./playwright:/code/playwright
     networks:
       - web
 
@@ -87,6 +101,9 @@ services:
      command: python -m src.scripts.init_script
      volumes:
        - ./src:/code/src
+     environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=ERROR
      networks:
       - web
 

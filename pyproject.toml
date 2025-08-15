@@ -29,6 +29,8 @@ pyjwt = "^2.10.1"
 python-multipart = "^0.0.20"
 pytz = "^2024.2"
 python-json-logger = "^3.2.1"
+blinker = "1.7.0"
+pytest-playwright = "^0.7.0"
 
 [tool.poetry.group.dev.dependencies]
 openpyxl = "^3.1.5"
