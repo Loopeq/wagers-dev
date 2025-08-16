@@ -20,11 +20,7 @@ async def run_parser():
     await collect_content()
     await clear_events_by_start_time()
 
-    scheduler.add_job(
-        lambda: asyncio.create_task(save_history(date=get_yesterday_ymd())),
-        trigger=CronTrigger(hour=1, minute=25)
-    )
-
+    scheduler.add_job(save_history, CronTrigger(hour=1, minute=25), kwargs={"date": get_yesterday_ymd()})
     scheduler.add_job(collect_heads, 'interval', minutes=parse_headers, args=[sports])
     scheduler.add_job(collect_content, 'interval', minutes=3)
     scheduler.add_job(clear_events_by_start_time, 'interval', days=int(clear_interval))

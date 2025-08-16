@@ -8,8 +8,6 @@ from src.core.models import Match, MatchMember, Team, MatchResult, League
 from sqlalchemy.orm import aliased
 from sqlalchemy import cast, Date
 from src.core.logger import get_module_logger
-import asyncio
-from src.core.utils import get_yesterday_ymd
 
 
 logger = get_module_logger(__name__)
@@ -74,6 +72,3 @@ async def save_history(date: str):
                     await session.execute(insert_stmt)
 
         await session.commit()
-
-
-asyncio.run(save_history(get_yesterday_ymd()))
