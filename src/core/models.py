@@ -1,9 +1,9 @@
 import datetime
 import enum
 from typing import Annotated
-import uuid as uuid_pkg
 
 from sqlalchemy import (
+    Boolean,
     ForeignKey,
     Index,
     text, UniqueConstraint,
@@ -103,15 +103,27 @@ class Bet(Base):
 
 
 class User(Base):
-
     __tablename__ = 'user'
-
-    uuid: Mapped[uuid_pkg.UUID] = mapped_column(
-        primary_key=True, unique=True, default=uuid_pkg.uuid4, nullable=False
-    )
+    email: Mapped[str] = mapped_column(primary_key=True, unique=True, nullable=False)
     password: Mapped[str] = mapped_column(nullable=False)
+    session_id: Mapped[str] = mapped_column(nullable=True)
     disabled: Mapped[bool] = mapped_column(nullable=False, default=False)
     superuser: Mapped[bool] = mapped_column(nullable=False, default=False)
+    created_at: Mapped[created_at]
+
+class InviteCode(Base):
+    __tablename__ = 'invite_code'
+
+    id: Mapped[intpk]
+    code: Mapped[str] = mapped_column(unique=True, index=True)
+    user_email: Mapped[str | None] = mapped_column(
+        ForeignKey('user.email', ondelete='CASCADE'),
+        nullable=True,
+        index=True
+    )
+    is_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
 
 
 class MatchResult(Base):

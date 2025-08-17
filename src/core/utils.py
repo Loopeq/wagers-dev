@@ -2,6 +2,7 @@ from passlib.context import CryptContext
 from src.core.constants import PERIODS
 from src.parser.config import sports_ids
 from datetime import timedelta, datetime
+import secrets
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -29,3 +30,7 @@ def get_yesterday_ymd():
     yesterday_utc = datetime.utcnow() - timedelta(days=1)
     formatted = yesterday_utc.strftime('%Y-%m-%d')
     return formatted
+
+
+def generate_invite_code(length: int = 12):
+    return secrets.token_urlsafe(length)[:length]

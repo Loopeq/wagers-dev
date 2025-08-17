@@ -16,6 +16,7 @@ services:
       - .env:/code/.env
       - ./logs:/code/logs
       - ./playwright:/code/playwright
+      - ./migrations:/code/migrations
     environment:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=ERROR
@@ -28,8 +29,6 @@ services:
       - .env
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
       interval: 2s

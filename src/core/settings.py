@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 import os
@@ -23,7 +21,7 @@ class Settings(BaseSettings):
     AUTH_EXPIRE_TOKEN_HOURS: int = os.environ.get('AUTH_EXPIRE_TOKEN_HOURS')
 
     # superuser
-    FIRST_USER_UUID: UUID = os.environ.get('FIRST_USER_UUID')
+    FIRST_USER_EMAIL: str = os.environ.get('FIRST_USER_EMAIL')
     FIRST_USER_PASSWORD: str = os.environ.get('FIRST_USER_PASSWORD')
 
     #pinnacle

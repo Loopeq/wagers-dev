@@ -9,15 +9,15 @@ from src.core.utils import get_password_hash
 
 
 async def create_first_superuser(session: AsyncSession):
-    UUID = settings.FIRST_USER_UUID
+    EMAIL = settings.FIRST_USER_EMAIL
     PASSWORD = get_password_hash(settings.FIRST_USER_PASSWORD)
 
-    stmt = select(User).filter(User.uuid == UUID)
+    stmt = select(User).filter(User.email == EMAIL)
     result = await session.execute(stmt)
     user = result.scalar_one_or_none()
     if not user:
         admin_user = User(
-            uuid=UUID,
+            email=EMAIL,
             password=PASSWORD,
             disabled=False,
             superuser=True,

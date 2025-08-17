@@ -1,7 +1,6 @@
 import datetime
 from typing import Optional
 from pydantic import BaseModel
-from uuid import UUID
 
 from src.core.models import MatchSideEnum
 
@@ -64,19 +63,19 @@ class BetChangeAddDTO(BaseModel):
     new_bet_id: int
 
 
-class BaseUser(BaseModel):
+class UserOut(BaseModel):
+    email: str
     disabled: bool
-    location: str
     superuser: bool
 
+class UserOutAdmin(UserOut):
+    created_at: datetime.datetime
 
-class UserOut(BaseUser):
-    uuid: UUID
-
-
-class UserInDB(BaseUser):
-    password: str
-
+class InviteCode(BaseModel):
+    user_email: str | None
+    code: str
+    created_at: datetime.datetime
+    is_used: bool
 
 class Token(BaseModel):
     access_token: str
@@ -84,7 +83,7 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    uuid: UUID | None = None
+    email: str | None = None
 
 
 class MatchResultDTO(BaseModel):
@@ -93,3 +92,9 @@ class MatchResultDTO(BaseModel):
     description: str
     team_1_score: int
     team_2_score: int
+
+
+class RegisterForm(BaseModel):
+    email: str
+    password: str
+    invite_code: str
