@@ -8,6 +8,7 @@ from src.core.models import Match, MatchMember, Team, MatchResult, League
 from sqlalchemy.orm import aliased
 from sqlalchemy import cast, Date
 from src.core.logger import get_module_logger
+from src.core.utils import get_yesterday_ymd
 
 
 logger = get_module_logger(__name__)
@@ -15,7 +16,8 @@ logger = get_module_logger(__name__)
 def timestamp_to_datetime(ms_timestamp: int) -> datetime:
     return datetime.fromtimestamp(ms_timestamp / 1000, tz=timezone.utc)
 
-async def save_history(date: str):
+async def save_history():
+    date = get_yesterday_ymd()
     response = await get_history_events(date=date)
     _, _, events, _ = response.data 
     async with db_helper.session_factory() as session:

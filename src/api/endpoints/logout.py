@@ -16,6 +16,6 @@ async def logout(
     current_user.session_id = None
     await session.commit()
 
-    response.delete_cookie("access_key")
+    response.delete_cookie("access_key", secure=True, httponly=True, samesite="none")
 
     return {"message": "Logged out successfully"}
