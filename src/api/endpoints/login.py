@@ -47,7 +47,7 @@ async def login_for_access_token(
         httponly=True,
         secure=True,
         samesite="none",
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )
     
     return user
