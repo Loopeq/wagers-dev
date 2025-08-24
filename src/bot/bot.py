@@ -17,7 +17,7 @@ from src.api.repositories.straight import get_straight_full_history
 import re
 from contextlib import asynccontextmanager
 from src.core.crud.api.related import get_child_ids
-
+from bs4 import BeautifulSoup
 
 dp = Dispatcher(storage=MemoryStorage())
 
@@ -114,6 +114,7 @@ async def send_report(match_id: int):
                 child_id = 0
             report = await get_straight_full_history(match_id=match_id, child_id=child_id, session=session)
             clean_report = clean_html(report)
+            clean_report = str(BeautifulSoup(clean_report, 'html.parser'))
             users = await UserOrm.get_users(session=session)
             for user in users:
                 if not user.telegram_id: 
