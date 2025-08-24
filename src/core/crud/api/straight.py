@@ -126,7 +126,6 @@ async def get_initial_last_points(match_id: int, child_id: int, session: AsyncSe
     bets = [bet.__dict__ for bet in bets]
     for bet in bets:
         bet.pop("_sa_instance_state", None)
-    print(bets)
     grouped_bets = {}
     for bet in bets:
         key = (bet['match_id'], bet["period"], bet["type"], bet["key"])
