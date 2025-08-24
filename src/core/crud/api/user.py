@@ -8,6 +8,7 @@ from src.core.models import User
 
 
 class UserOrm:
+
     @staticmethod
     async def get_user_by_email(
             email: str, session: AsyncSession
@@ -20,7 +21,22 @@ class UserOrm:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password",
-            )
+        )
+
+    @staticmethod
+    async def get_user_by_telegram_id(
+            tg_id: str, session: AsyncSession
+    ) -> User | None:
+        stmt = select(User).filter(User.telegram_id == tg_id)
+        try:
+            result = await session.execute(stmt)
+            return result.scalar_one_or_none()
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect tg_id",
+        )
+
 
     @staticmethod
     async def create_user(

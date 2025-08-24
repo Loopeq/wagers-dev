@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from sqlalchemy import select, func, case, asc, desc, and_, distinct, or_
+from sqlalchemy import select, func, case, asc, desc, distinct, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
@@ -124,3 +124,18 @@ async def get_matches(session: AsyncSession,
         for result in results]
 
     return matches
+
+
+async def get_child_ids(match_id: int, session: AsyncSession) -> list[int]:
+    result = await session.execute(
+        select(Match.id).where(Match.parent_id == match_id)
+    )
+    child_ids = [row[0] for row in result.all()]
+    return child_ids
+
+async def get_sport_id_by_match_id(match_id: int, session: AsyncSession) -> int:
+    result = await session.execute(
+        select(League.sport_id).select_from(Match).join(League, League.id == Match.league_id).filter(Match.id == match_id)
+    )
+    sport_id = result.scalar_one_or_none()
+    return sport_id

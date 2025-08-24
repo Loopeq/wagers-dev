@@ -85,6 +85,29 @@ services:
     networks:
       - web
 
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+    command: >
+          watchmedo auto-restart --directory=src/bot --pattern="*.py" --recursive -- 
+          python -u -m src.bot.bot
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=ERROR
+    volumes:
+      - ./src:/code/src
+      - ./logs:/code/logs
+      - ./playwright:/code/playwright
+    networks:
+      - web
 
   initial_script:
      build:

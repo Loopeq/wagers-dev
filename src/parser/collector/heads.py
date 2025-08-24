@@ -69,13 +69,18 @@ async def collect_heads_data(data: list[dict], sport_name: str):
             if indegree[child_id] == 0:
                 queue.append(child_id)
 
-    inserted = 0
+    results: list[Match] = []
     for match_id in sorted_ids:
         event = event_by_id[match_id]
         try:
-            inserted += await process_match(event, existing_match_ids)
+            dto = await process_match(event, existing_match_ids)
+            if dto:
+                results.append(dto)
         except Exception as e:
             logger.error(f"Process match error {match_id}: {e}")
+
+    return results
+
 
 async def process_match(event: dict, existing_ids: list) -> int:
     match_id = event["id"]
@@ -105,7 +110,7 @@ async def process_match(event: dict, existing_ids: list) -> int:
         team_away=team_away
     )
 
-    return 1
+    return match_orm
 
 
 async def collect_heads(sports: dict[str, int]):
@@ -119,5 +124,10 @@ async def collect_heads(sports: dict[str, int]):
         if resp.status != 404
     ]
 
+    results: list[Match] = []
     if tasks:
-        await asyncio.gather(*tasks)
+        nested = await asyncio.gather(*tasks)
+        for batch in nested:
+            results.extend(batch)
+
+    return results

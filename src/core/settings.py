@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     PINNACLE_LOG: str = os.environ.get('PINNACLE_LOG')
     PINNACLE_PASS: str = os.environ.get('PINNACLE_PASS')
     
+    #tg bot
+    TG_BOT_KEY: str = os.environ.get('TG_BOT_KEY')
+
     @property
     def DATABASE_URL(self):
         return (f"postgresql+asyncpg://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}@{os.environ['DB_HOST']}:"

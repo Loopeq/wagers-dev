@@ -107,6 +107,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(primary_key=True, unique=True, nullable=False)
     password: Mapped[str] = mapped_column(nullable=False)
     session_id: Mapped[str] = mapped_column(nullable=True)
+    telegram_id: Mapped[str] = mapped_column(nullable=True)
     disabled: Mapped[bool] = mapped_column(nullable=False, default=False)
     superuser: Mapped[bool] = mapped_column(nullable=False, default=False)
     created_at: Mapped[created_at]

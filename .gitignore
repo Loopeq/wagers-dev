@@ -3,3 +3,4 @@ __pycache__/
 .env
 logs/
 playwright/
+src/trash_and_samples

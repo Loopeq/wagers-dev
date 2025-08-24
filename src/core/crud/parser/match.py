@@ -68,10 +68,12 @@ async def add_match_cascade(league: League, match: Match, team_home: Team,
                 raise
 
 
-async def get_upcoming_matches():
+async def get_upcoming_matches(sport_id: int = None):
     async with db_helper.session_factory() as session:
         current_time = datetime.utcnow()
         query = select(Match.start_time, Match.id, Match.parent_id, League.sport_id).outerjoin(League, League.id == Match.league_id)
+        if sport_id: 
+            query.filter(League.sport_id == sport_id)
         query = query.filter(Match.start_time > current_time)
         result = await session.execute(query)
         matches = result.fetchall()
@@ -126,4 +128,3 @@ async def clear_events_by_start_time():
         await session.execute(stmt)
 
         await session.commit()
-

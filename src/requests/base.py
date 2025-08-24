@@ -31,8 +31,12 @@ async def get_request(url: str, headers: dict, params: dict = None, cookies: dic
                                        params=params,
                                        proxy=proxy,
                                        timeout=5) as resp:
+                    ctype = resp.headers.get("Content-Type", "").lower()
                     if resp.status == 200:
-                        response = await resp.json()
+                        if 'application/json' in ctype:
+                            response = await resp.json()
+                        else: 
+                            response = await resp.text()
                         return Response(status=resp.status, data=response, headers=dict(resp.headers))
                     elif resp.status == 404:
                         return Response(status=resp.status)

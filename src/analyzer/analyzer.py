@@ -1,0 +1,28 @@
+from g4f.client import AsyncClient
+from src.trash_and_samples.promt import ROLE
+from g4f.Provider import RetryProvider, Blackbox, LegacyLMArena, PollinationsAI, WeWordle, Yqcloud
+
+async def get_analyzed(content: str, tool_call_query: str):
+    client = AsyncClient(provider=RetryProvider([Blackbox, LegacyLMArena, PollinationsAI, WeWordle, Yqcloud], shuffle=True))
+    tool_call = {
+        "type": "function",
+        "function": {
+            "name": "search_tool",
+            "arguments": {
+            "query": tool_call_query,
+            "max_results": 5,
+            "max_words": 1500,
+            "backend": "auto",
+            "add_text": True,
+            "timeout": 10
+            }
+        }
+    }
+    
+    response = await client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "developer", "content": ROLE},
+                  {"role": "user", "content": content}],
+        tool_call=tool_call
+    )
+    return response.choices[0].message.content
