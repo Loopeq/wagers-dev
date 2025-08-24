@@ -28,7 +28,7 @@ def schedule_match_callback(match):
 
 
 async def reschedule_all_matches():
-    matches = await get_upcoming_matches(sport_id=33)
+    matches = await get_upcoming_matches(sport_id=33, include_parents=False)
     for match in matches:
         schedule_match_callback(match)
 
