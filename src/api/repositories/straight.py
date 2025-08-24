@@ -112,7 +112,7 @@ async def get_straight(match_id: int, child_id: int, session: AsyncSession):
                                         sport_id=match['match']['sport_id']
                                     )
 
-    comparison = await get_initial_last_points(match_id=match_id, session=session)
+    comparison = await get_initial_last_points(match_id=match_id, child_id=child_id, session=session)
 
     mapped_comparison = await get_mapped_comparison(comparison=comparison, match_id=match_id, child_id=child_id, sport_id=match['match']['sport_id'])
     return {**match, "changes": mapped_changes, "comparison": mapped_comparison, "periods": unique_periods}

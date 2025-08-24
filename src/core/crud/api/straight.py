@@ -80,7 +80,7 @@ async def get_changes(match_ids: list, periods: list | None, session: AsyncSessi
     return changes
 
 
-async def get_initial_last_points(match_id: int, session: AsyncSession):
+async def get_initial_last_points(match_id: int, child_id: int, session: AsyncSession):
     max_version_subq = (
         select(
             Bet.period,
@@ -88,7 +88,7 @@ async def get_initial_last_points(match_id: int, session: AsyncSession):
             Bet.key,
             func.max(Bet.version).label("max_version")
         )
-        .filter(Bet.match_id == match_id, Bet.version != 0)
+        .filter(or_(Bet.match_id == match_id, Bet.match_id == child_id), Bet.version != 0)
         .group_by(Bet.period, Bet.type, Bet.key)
         .subquery()
     )
@@ -105,7 +105,10 @@ async def get_initial_last_points(match_id: int, session: AsyncSession):
             )
         )
         .filter(
-            bet_alias.match_id == match_id,
+            or_(
+                bet_alias.match_id == match_id,
+                bet_alias.match_id == child_id 
+            ),
             or_(
                 bet_alias.version == 0,
                 bet_alias.version == max_version_subq.c.max_version
@@ -123,10 +126,10 @@ async def get_initial_last_points(match_id: int, session: AsyncSession):
     bets = [bet.__dict__ for bet in bets]
     for bet in bets:
         bet.pop("_sa_instance_state", None)
-
+    print(bets)
     grouped_bets = {}
     for bet in bets:
-        key = (bet["period"], bet["type"], bet["key"])
+        key = (bet['match_id'], bet["period"], bet["type"], bet["key"])
         if key not in grouped_bets:
             grouped_bets[key] = []
         grouped_bets[key].append(bet)
