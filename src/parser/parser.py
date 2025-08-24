@@ -16,7 +16,7 @@ scheduler = AsyncIOScheduler()
 
 
 def schedule_match_callback(match):
-    run_time = match.start_time - timedelta(minutes=20)
+    run_time = match.start_time - timedelta(minutes=10)
     scheduler.add_job(
         send_report,
         "date",
