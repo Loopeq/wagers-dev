@@ -1,5 +1,5 @@
 from g4f.client import AsyncClient
-from src.trash_and_samples.promt import ROLE
+from src.analyzer.promt import ROLE
 from g4f.Provider import RetryProvider, Blackbox, LegacyLMArena, PollinationsAI, WeWordle, Yqcloud
 
 async def get_analyzed(content: str, tool_call_query: str):
