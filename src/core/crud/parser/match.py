@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, update
 from sqlalchemy.dialects.postgresql import insert
 from src.core.db.db_helper import db_helper
 from src.core.models import Match, League, MatchMember, Team, MatchResult
@@ -129,4 +129,15 @@ async def clear_events_by_start_time():
         stmt = delete(Match).where(Match.id.in_(subquery))
         await session.execute(stmt)
 
+        await session.commit()
+
+
+async def update_match_start_time(match_id: int, new_start_time: datetime) -> None:
+    async with db_helper.session_factory() as session:
+        stmt = (
+            update(Match)
+            .where(Match.id == match_id)
+            .values(start_time=new_start_time)
+        )
+        await session.execute(stmt)
         await session.commit()

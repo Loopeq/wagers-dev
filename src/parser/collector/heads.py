@@ -4,7 +4,7 @@ from collections import defaultdict, deque
 from src.requests.matchups import get_match_up_response
 from src.core.models import League, Match, Team
 from src.parser.utils.common import iso_to_utc
-from src.core.crud.parser.match import check_exist, add_match_cascade
+from src.core.crud.parser.match import check_exist, add_match_cascade, update_match_start_time
 from src.core.logger import get_module_logger
 
 logger = get_module_logger(__name__)
@@ -86,20 +86,25 @@ async def process_match(event: dict, existing_ids: list) -> int:
     match_id = event["id"]
     parent = event.get("parent")
     parent_id = parent["id"] if parent and isinstance(parent, dict) and "id" in parent else None
-
-    if match_id in existing_ids:
-        return 0
+    match_start_time = iso_to_utc(event["startTime"])
 
     league = event["league"]
     sport = league["sport"]
     participants = event["participants"]
     league_orm = League(id=league["id"], sport_id=sport["id"], name=league["name"])
+    
     match_orm = Match(
         id=match_id,
         parent_id=parent_id,
         league_id=league["id"],
-        start_time=iso_to_utc(event["startTime"])
+        start_time=match_start_time
     )
+    
+    if match_id in existing_ids:
+        await update_match_start_time(match_id=match_id, new_start_time=match_start_time)
+        return match_orm
+
+
     team_home = Team(name=participants[0]["name"], league_id=league["id"])
     team_away = Team(name=participants[1]["name"], league_id=league["id"])
 
