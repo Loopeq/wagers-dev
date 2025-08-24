@@ -40,6 +40,8 @@ async def collect_heads_wrapper(sports):
             sport_id = await get_sport_id_by_match_id(match_id=match.id, session=session)
             if sport_id != 33: # Убираем всё кроме тенниса
                 continue
+            if match.parent_id is not None:
+                continue
             schedule_match_callback(match=match)
 
 
