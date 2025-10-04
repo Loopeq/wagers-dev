@@ -1,13 +1,14 @@
 import itertools
 import logging
-
-from webshare import ApiClient
+from collections import namedtuple
 from src.core.settings import settings as conf
-
+import requests
 
 class NoValidProxyError(Exception):
     """When all proxies are invalid"""
     pass
+
+Proxy = namedtuple("Proxy", ["username", "password", "proxy_address", "port"])
 
 
 class ProxyManager:
@@ -15,14 +16,29 @@ class ProxyManager:
     _SCHEMA = 'http://{0}:{1}@{2}:{3}'
 
     def __init__(self):
-        self._client = ApiClient(conf.WEBSHARE_API)
-        self._proxy_list = self._client.get_proxy_list().get_results()
-
-        if not self._proxy_list:
-            logging.error("No proxies available from WebShare API")
+        self._proxy_list = self._get_proxies(10)
+        if not len(self._proxy_list):
+            with open('data/proxies.txt') as f: 
+                for pr in f.readlines(): 
+                    pr_strip = pr.rstrip('\n')
+                    ip, port, username, password = pr_strip.split(':')
+                    proxy = Proxy(username, password, ip, port)
+                    self._proxy_list.append(proxy)                    
 
         self._proxy_cycle = itertools.cycle(self._proxy_list)
         self._current_proxy = next(self._proxy_cycle)
+
+
+    @staticmethod
+    def _get_proxies(timeout=5):
+        url = "https://proxy.webshare.io/api/v2/proxy/list/"
+        headers = {"Authorization": f"Token {conf.WEBSHARE_API}"}
+        try:
+            resp = requests.get(url, headers=headers, timeout=timeout)
+            return resp.json().get("results", [])
+        except requests.Timeout:
+            logging.error(f"WebShare API did not respond within {timeout} seconds")
+            return []
 
     @property
     def proxy(self) -> str:

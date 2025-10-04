@@ -15,6 +15,7 @@ services:
       - ./src:/code/src
       - .env:/code/.env
       - ./logs:/code/logs
+      - ./data:/code/data
       - ./migrations:/code/migrations
     environment:
       - PYTHONUNBUFFERED=1
@@ -61,7 +62,6 @@ services:
    networks:
       - web
 
-
   parser:
     build:
       context: .
@@ -80,6 +80,7 @@ services:
     volumes:
       - ./src:/code/src
       - ./logs:/code/logs
+      - ./data:/code/data
     networks:
       - web
 

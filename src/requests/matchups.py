@@ -1,5 +1,6 @@
 from src.requests.base import get_request
 from src.core.logger import get_module_logger
+import asyncio
 
 HEADERS = {
     'sec-ch-ua': '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',
@@ -29,3 +30,6 @@ async def get_match_up_response(event_id: int):
         logger.error(f'Error fetching {URL.format(event_id)}')
     return response
 
+
+if __name__ == "__main__":
+    asyncio.run(get_match_up_response(33))
