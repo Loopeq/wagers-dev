@@ -4,3 +4,4 @@ __pycache__/
 logs/
 playwright/
 src/trash_and_samples
+.vscode/
