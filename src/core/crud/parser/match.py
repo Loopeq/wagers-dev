@@ -122,6 +122,7 @@ async def clear_events_by_start_time():
             .join(League, Match.league_id == League.id)
             .where(
                 Match.start_time < current_time - timedelta(days=int(clear_threshold)),
+                League.sport_id != sports['tennis']
             )
         )
 
