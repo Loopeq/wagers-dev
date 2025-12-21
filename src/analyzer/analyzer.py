@@ -1,9 +1,9 @@
 from g4f.client import AsyncClient
 from src.analyzer.promt import ROLE
-from g4f.Provider import RetryProvider, Bing, GeekGpt, Liaobots, Phind, Raycast
+from g4f.Provider import RetryProvider, GeekGpt, Liaobots, Phind, Raycast
 
 async def get_analyzed(content: str, tool_call_query: str):
-    client = AsyncClient(provider=RetryProvider([Bing, GeekGpt, Liaobots, Phind, Raycast], shuffle=True))
+    client = AsyncClient(provider=RetryProvider([GeekGpt, Liaobots, Phind, Raycast], shuffle=True))
     tool_call = {
         "type": "function",
         "function": {
