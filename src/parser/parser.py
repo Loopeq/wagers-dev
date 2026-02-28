@@ -8,13 +8,12 @@ import src.core.crud.parser.sport as sport
 from src.parser.collector.history import save_history
 from apscheduler.triggers.cron import CronTrigger
 from datetime import timedelta
-from src.bot.bot import send_report
 from src.core.crud.api.related import get_sport_id_by_match_id
 from src.core.db.db_helper import db_helper
 
 scheduler = AsyncIOScheduler()
 
-
+'''
 def schedule_match_callback(match):
     run_time = match.start_time - timedelta(minutes=10)
     scheduler.add_job(
@@ -25,13 +24,14 @@ def schedule_match_callback(match):
         args=[match.id],
         id=f"{match.id}"
     )
+'''
 
-
+'''
 async def reschedule_all_matches():
     matches = await get_upcoming_matches(sport_id=33, include_parents=False)
     for match in matches:
         schedule_match_callback(match)
-
+'''
 
 async def collect_heads_wrapper(sports):
     results = await collect_heads(sports=sports)
@@ -42,7 +42,7 @@ async def collect_heads_wrapper(sports):
                 continue
             if match.parent_id is not None:
                 continue
-            schedule_match_callback(match=match)
+            # schedule_match_callback(match=match)
 
 
 async def run_parser():
@@ -51,7 +51,7 @@ async def run_parser():
     await collect_heads_wrapper(sports=sports)
     await collect_content()
     await clear_events_by_start_time()
-    await reschedule_all_matches()
+    # await reschedule_all_matches()
 
     scheduler.add_job(save_history, CronTrigger(hour=1, minute=25))
     scheduler.add_job(collect_heads_wrapper, 'interval', minutes=parse_headers, args=[sports])
