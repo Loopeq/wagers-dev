@@ -91,6 +91,7 @@ class Bet(Base):
     point: Mapped[float] = mapped_column(nullable=True)
     limit: Mapped[int] = mapped_column(nullable=False, default=0)
     home_cf: Mapped[float] = mapped_column(nullable=False)
+    draw_cf: Mapped[float] = mapped_column(nullable=True)
     away_cf: Mapped[float] = mapped_column(nullable=False)
     type: Mapped[str] = mapped_column(nullable=False)
     period: Mapped[int] = mapped_column(nullable=False)

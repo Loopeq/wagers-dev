@@ -15,9 +15,6 @@ RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/ap
 COPY --from=requirements-stage /tmp/requirements.txt /code/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-RUN python -m playwright install-deps
-RUN python -m playwright install
-
 COPY . .
 
 

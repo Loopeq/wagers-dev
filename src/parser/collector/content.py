@@ -87,12 +87,17 @@ async def extract_bet_content(match: MatchUpcomingDTO, response_date: datetime.d
         limit_max = limits.get('amount')
         home_price = calc_coeff(prices[0]['price'])
         away_price = calc_coeff(prices[1]['price'])
+        draw_price = None
+        if len(prices) == 3: 
+            draw_price = calc_coeff(prices[2]['price'])
+
         bets.append(
             BetAddDTO(
                 match_id=match.id,
                 point=point,
                 max_limit=limit_max,
                 home_cf=home_price,
+                draw_cf=draw_price,
                 away_cf=away_price,
                 type=w_type,
                 period=period,

@@ -110,6 +110,7 @@ async def insert_bets_coeffs(bets: List[BetAddDTO]):
                         point=bet.point,
                         limit=bet.max_limit,
                         home_cf=bet.home_cf,
+                        draw_cf=bet.draw_cf,
                         away_cf=bet.away_cf,
                         type=bet.type,
                         period=bet.period,
@@ -123,6 +124,7 @@ async def insert_bets_coeffs(bets: List[BetAddDTO]):
                     point=bet.point,
                     limit=bet.max_limit,
                     home_cf=bet.home_cf,
+                    draw_cf=bet.draw_cf,
                     away_cf=bet.away_cf,
                     type=bet.type,
                     period=bet.period,
@@ -135,20 +137,6 @@ async def insert_bets_coeffs(bets: List[BetAddDTO]):
             session.add_all(new_bets)
             await session.commit()
 
-
-def create_bet(match_id: int, bet: BetAddDTO, version: int, created_at: datetime) -> Bet:
-    return Bet(
-            match_id=match_id,
-            point=bet.point,
-            limit=bet.max_limit,
-            home_cf=bet.home_cf,
-            away_cf=bet.away_cf,
-            type=bet.type,
-            period=bet.period,
-            version=version,
-            key=bet.key,
-            created_at=created_at
-    )
 
 async def get_event_bets(match_id: int):
     async with db_helper.session_factory() as session:
