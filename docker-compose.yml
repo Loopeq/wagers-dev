@@ -106,9 +106,66 @@ services:
      networks:
       - web
 
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+    networks:
+      - web
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery_worker
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+      - web
+    command: celery -A src.parser.worker.app.celery_app worker --loglevel=ERROR
+    volumes:
+      - ./src:/code/src
+      - ./logs:/code/logs
+      - ./data:/code/data
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=ERROR
+    networks:
+      - web
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery_beat
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+      - web
+    command: celery -A src.parser.worker.app.celery_app beat --loglevel=INFO
+    volumes:
+      - ./src:/code/src
+      - ./logs:/code/logs
+      - ./data:/code/data
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    networks:
+      - web
+
 volumes:
   postgres-data:
   pgadmin-data:
+  redis-data:
 
 networks:
   web:
