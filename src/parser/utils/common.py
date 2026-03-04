@@ -21,3 +21,14 @@ def calc_coeff(price):
         return round(price / 100 + 1, 3)
     return round(abs(100 / price) + 1, 3)
 
+def to_dict_for_insert(obj, extra_fields=None):
+    data = {}
+    for col in obj.__table__.columns:
+        value = getattr(obj, col.name)
+        if isinstance(value, datetime.datetime):
+            if value.tzinfo is None:
+                value = value.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+        data[col.name] = value
+    if extra_fields:
+        data.update(extra_fields)
+    return data

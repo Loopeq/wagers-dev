@@ -102,7 +102,6 @@ class Bet(Base):
         Index('idx_bet_latest_version', 'match_id', 'type', 'period', 'version', postgresql_ops={'version': 'desc'}),
     )
 
-
 class User(Base):
     __tablename__ = 'user'
     email: Mapped[str] = mapped_column(primary_key=True, unique=True, nullable=False)
@@ -144,4 +143,63 @@ class MatchResult(Base):
     )
 
 
+# Архивные таблицы 
 
+class MatchArchive(Base):
+    __tablename__ = 'match_archive'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey('match_archive.id'), nullable=True, index=True)
+    league_id: Mapped[int] = mapped_column(ForeignKey('league.id'), nullable=False)
+    start_time: Mapped[datetime.datetime] = mapped_column(nullable=False, index=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    archived_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow, nullable=False)
+
+class MatchMemberArchive(Base):
+    __tablename__ = 'match_member_archive'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    match_id: Mapped[int] = mapped_column(ForeignKey('match_archive.id', ondelete='CASCADE'), nullable=False, index=True)
+    home_id: Mapped[int] = mapped_column(ForeignKey('team.id', ondelete='CASCADE'), nullable=False, index=True)
+    away_id: Mapped[int] = mapped_column(ForeignKey('team.id', ondelete='CASCADE'), nullable=False, index=True)
+    archived_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('match_id', 'home_id', 'away_id', name='uq_match_member_archive_combination'),
+    )
+
+class BetArchive(Base):
+    __tablename__ = 'bet_archive'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    match_id: Mapped[int] = mapped_column(ForeignKey('match_archive.id', ondelete='CASCADE'), nullable=False, index=True)
+    point: Mapped[float] = mapped_column(nullable=True)
+    limit: Mapped[int] = mapped_column(nullable=False, default=0)
+    home_cf: Mapped[float] = mapped_column(nullable=False)
+    draw_cf: Mapped[float] = mapped_column(nullable=True)
+    away_cf: Mapped[float] = mapped_column(nullable=False)
+    type: Mapped[str] = mapped_column(nullable=False)
+    period: Mapped[int] = mapped_column(nullable=False)
+    key: Mapped[str] = mapped_column(nullable=False)
+    version: Mapped[int] = mapped_column(nullable=False, default=1)
+    created_at: Mapped[datetime.datetime] = mapped_column(nullable=False, index=True)
+    archived_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        Index('idx_bet_archive_latest_version', 'match_id', 'type', 'period', 'version', postgresql_ops={'version': 'desc'}),
+    )
+
+class MatchResultArchive(Base):
+    __tablename__ = 'match_result_archive'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    match_id: Mapped[int] = mapped_column(ForeignKey('match_archive.id', ondelete='CASCADE'), nullable=False, index=True)
+    period: Mapped[int] = mapped_column(nullable=False, index=True)
+    description: Mapped[str] = mapped_column(nullable=False, index=True)
+    team_1_score: Mapped[int] = mapped_column(nullable=False)
+    team_2_score: Mapped[int] = mapped_column(nullable=False)
+    archived_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('match_id', 'period', name='uq_match_result_archive_combination'),
+    )

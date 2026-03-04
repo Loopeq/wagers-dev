@@ -1,13 +1,15 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List
 
 from sqlalchemy import select, delete, update
 from sqlalchemy.dialects.postgresql import insert
 from src.core.db.db_helper import db_helper
-from src.core.models import Match, League, MatchMember, Team, MatchResult
+from src.core.models import (Bet, BetArchive, League, Match, MatchArchive, MatchMember,
+    MatchMemberArchive, MatchResult, MatchResultArchive, Team)
 from src.core.schemas import MatchUpcomingDTO, MatchResultDTO
 import logging
-from src.parser.config import clear_threshold, sports
+
+from src.parser.utils.common import to_dict_for_insert
 
 
 async def check_exist(ids: list):
@@ -114,23 +116,74 @@ async def add_match_results(match_results: List[MatchResultDTO]):
         await session.commit()
 
 
-async def clear_events_by_start_time():
-    async with db_helper.session_factory() as session:
-        current_time = datetime.utcnow()
-        subquery = (
-            select(Match.id)
-            .join(League, Match.league_id == League.id)
-            .where(
-                Match.start_time < current_time - timedelta(days=int(clear_threshold)),
-                League.sport_id != sports['tennis']
+async def bulk_insert(session, model, objects):
+    BATCH_SIZE = 1000
+    for i in range(0, len(objects), BATCH_SIZE):
+        chunk = objects[i:i+BATCH_SIZE]
+        await session.execute(
+            insert(model).values(
+                [to_dict_for_insert(obj) for obj in chunk]
             )
         )
 
-        stmt = delete(Match).where(Match.id.in_(subquery))
-        await session.execute(stmt)
+
+async def archive_and_clear_matches(clear_threshold: int = 5):
+    async with db_helper.session_factory() as session:
+        current_time = datetime.utcnow()
+        threshold_time = current_time - timedelta(days=clear_threshold)
+        old_matches = (await session.execute(
+            select(Match)
+            .join(League)
+            .where(Match.start_time < threshold_time)
+        )).scalars().all()
+
+        if not old_matches:
+            return
+
+        old_match_ids = [m.id for m in old_matches]
+
+        await session.execute(
+            insert(MatchArchive).values(
+                [to_dict_for_insert(m) for m in old_matches]
+            )
+        )
+
+        await session.flush()
+
+        old_members = (await session.execute(
+            select(MatchMember).where(MatchMember.match_id.in_(old_match_ids))
+        )).scalars().all()
+
+        if old_members:
+            await session.execute(
+                insert(MatchMemberArchive).values(
+                    [to_dict_for_insert(m) for m in old_members]
+                )
+            )
+
+        old_bets = (await session.execute(
+            select(Bet).where(Bet.match_id.in_(old_match_ids))
+        )).scalars().all()
+
+        if old_bets:
+            await bulk_insert(session, BetArchive, old_bets)
+
+        old_results = (await session.execute(
+            select(MatchResult).where(MatchResult.match_id.in_(old_match_ids))
+        )).scalars().all()
+
+        if old_results:
+            await session.execute(
+                insert(MatchResultArchive).values(
+                    [to_dict_for_insert(r) for r in old_results]
+                )
+            )
+
+        await session.execute(
+            delete(Match).where(Match.id.in_(old_match_ids))
+        )
 
         await session.commit()
-
 
 async def update_match_start_time(match_id: int, new_start_time: datetime) -> None:
     async with db_helper.session_factory() as session:
