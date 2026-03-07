@@ -16,7 +16,7 @@ def get_password_hash(password):
 
 
 def format_key(key: str):
-    return ';'.join(key.split(';')[:3])
+    return ";".join(key.split(";")[:3])
 
 
 def get_period_title(sport_id: int, key: str, relation: str | None):
@@ -26,9 +26,10 @@ def get_period_title(sport_id: int, key: str, relation: str | None):
         sport = sport.get(relation)
     return sport.get(key)
 
+
 def get_yesterday_ymd():
     yesterday_utc = datetime.utcnow() - timedelta(days=1)
-    formatted = yesterday_utc.strftime('%Y-%m-%d')
+    formatted = yesterday_utc.strftime("%Y-%m-%d")
     return formatted
 
 

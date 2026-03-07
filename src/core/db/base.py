@@ -9,10 +9,9 @@ str_64 = Annotated[str, 64]
 
 
 class Base(DeclarativeBase):
-    type_annotation_map = {
-        str_256: String(256)
-    }
+    type_annotation_map = {str_256: String(256)}
 
     def to_dict(self):
-        return {column.name: getattr(self, column.name) for column in self.__table__.columns}
-
+        return {
+            column.name: getattr(self, column.name) for column in self.__table__.columns
+        }

@@ -10,9 +10,7 @@ from src.core.models import User
 class UserOrm:
 
     @staticmethod
-    async def get_user_by_email(
-            email: str, session: AsyncSession
-    ) -> User | None:
+    async def get_user_by_email(email: str, session: AsyncSession) -> User | None:
         stmt = select(User).filter(User.email == email)
         try:
             result = await session.execute(stmt)
@@ -21,12 +19,10 @@ class UserOrm:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password",
-        )
+            )
 
     @staticmethod
-    async def get_user_by_telegram_id(
-            tg_id: str, session: AsyncSession
-    ) -> User | None:
+    async def get_user_by_telegram_id(tg_id: str, session: AsyncSession) -> User | None:
         stmt = select(User).filter(User.telegram_id == tg_id)
         try:
             result = await session.execute(stmt)
@@ -35,13 +31,10 @@ class UserOrm:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect tg_id",
-        )
-
+            )
 
     @staticmethod
-    async def create_user(
-        email: str, password: str, session: AsyncSession 
-    ) -> User:
+    async def create_user(email: str, password: str, session: AsyncSession) -> User:
         new_user = User(email=email, password=password)
         session.add(new_user)
 
@@ -52,21 +45,16 @@ class UserOrm:
         except:
             await session.rollback()
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Could not create user"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Could not create user"
             )
-    
+
     @staticmethod
     async def get_users(session: AsyncSession):
-        stmt = (
-            select(User)
-        )
+        stmt = select(User)
         try:
             result = await session.execute(stmt)
             return result.scalars()
         except Exception:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Could not get users"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Could not get users"
             )
-    

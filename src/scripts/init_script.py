@@ -30,5 +30,6 @@ async def main():
     async with db_helper.session_factory() as session:
         await create_first_superuser(session)
 
+
 if __name__ == "__main__":
     asyncio.run(main())

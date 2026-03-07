@@ -69,14 +69,17 @@ class UserOut(BaseModel):
     disabled: bool
     superuser: bool
 
+
 class UserOutAdmin(UserOut):
     created_at: datetime.datetime
+
 
 class InviteCode(BaseModel):
     user_email: str | None
     code: str
     created_at: datetime.datetime
     is_used: bool
+
 
 class Token(BaseModel):
     access_token: str

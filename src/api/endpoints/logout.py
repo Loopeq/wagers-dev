@@ -11,7 +11,7 @@ router = APIRouter(prefix="/logout", tags=["Logout"])
 async def logout(
     current_user: CURRENT_ACTIVE_USER,
     session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
-    response: Response
+    response: Response,
 ):
     current_user.session_id = None
     await session.commit()

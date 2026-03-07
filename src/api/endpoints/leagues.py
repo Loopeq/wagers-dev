@@ -12,9 +12,10 @@ router = APIRouter(prefix="/leagues", tags=["Leagues"])
 
 
 @router.get("", response_model=list[LeagueDTO])
-async def get_leagues(current_user: CURRENT_ACTIVE_USER,
-                      session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
-                      sport_id: int):
+async def get_leagues(
+    current_user: CURRENT_ACTIVE_USER,
+    session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
+    sport_id: int,
+):
     leagues = await fetch_leagues(session=session, sport_id=sport_id)
     return leagues
-

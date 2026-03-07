@@ -20,9 +20,9 @@ def create_application(router: APIRouter, **kwargs: Any) -> FastAPI:
         "https://swaeger.com",
         "https://spredly.ru",
     ]
-    if settings.DEV == '1':
+    if settings.DEV == "1":
         for port in range(8010, 8200):
-            origins.append(f'http://localhost:{port}')
+            origins.append(f"http://localhost:{port}")
 
     lifespan = lifespan_factory()
     application = FastAPI(lifespan=lifespan, **kwargs)
@@ -32,7 +32,7 @@ def create_application(router: APIRouter, **kwargs: Any) -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["*"]
+        expose_headers=["*"],
     )
     application.include_router(router)
     return application

@@ -21,35 +21,34 @@ router = APIRouter(prefix="/login", tags=["Login"])
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
-    response: Response
+    response: Response,
 ):
-    user = await authenticate_user(
-        form_data.username, form_data.password, session
-    )
+    user = await authenticate_user(form_data.username, form_data.password, session)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
-    
+
     session_id = str(uuid.uuid4())
     user.session_id = session_id
     await session.commit()
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": str(user.email), "sid": session_id}, expires_delta=access_token_expires
+        data={"sub": str(user.email), "sid": session_id},
+        expires_delta=access_token_expires,
     )
 
     response.set_cookie(
-        key='access_key',
+        key="access_key",
         value=access_token,
         httponly=True,
         secure=True,
         samesite="none",
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
-    
+
     return user
 
 

@@ -13,9 +13,7 @@ ALGORITHM = settings.AUTH_ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.AUTH_EXPIRE_TOKEN_HOURS * 60
 
 
-async def authenticate_user(
-        email: str, password: str, session: AsyncSession
-):
+async def authenticate_user(email: str, password: str, session: AsyncSession):
     user = await UserOrm.get_user_by_email(email, session)
     if user is None:
         return False
@@ -37,12 +35,9 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 def get_token_from_cookie(request: Request):
-    token = request.cookies.get('access_key')
+    token = request.cookies.get("access_key")
     if not token:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Not authenticated'
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
         )
     return token
-
-    

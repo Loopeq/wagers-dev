@@ -9,33 +9,42 @@ load_dotenv()
 class Settings(BaseSettings):
 
     # api
-    WEBSHARE_API: str = os.environ['WEBSHARE_API']
-    RAPID_KEY: str = os.environ['RAPID_KEY']
+    WEBSHARE_API: str = os.environ["WEBSHARE_API"]
+    RAPID_KEY: str = os.environ["RAPID_KEY"]
 
     # dev flag
-    DEV: str = os.environ.get('DEV')
+    DEV: str = os.environ.get("DEV")
 
     # auth
-    AUTH_SECRET: str = os.environ.get('AUTH_SECRET')
-    AUTH_ALGORITHM: str = os.environ.get('AUTH_ALGORITHM')
-    AUTH_EXPIRE_TOKEN_HOURS: int = os.environ.get('AUTH_EXPIRE_TOKEN_HOURS')
+    AUTH_SECRET: str = os.environ.get("AUTH_SECRET")
+    AUTH_ALGORITHM: str = os.environ.get("AUTH_ALGORITHM")
+    AUTH_EXPIRE_TOKEN_HOURS: int = os.environ.get("AUTH_EXPIRE_TOKEN_HOURS")
 
     # superuser
-    FIRST_USER_EMAIL: str = os.environ.get('FIRST_USER_EMAIL')
-    FIRST_USER_PASSWORD: str = os.environ.get('FIRST_USER_PASSWORD')
+    FIRST_USER_EMAIL: str = os.environ.get("FIRST_USER_EMAIL")
+    FIRST_USER_PASSWORD: str = os.environ.get("FIRST_USER_PASSWORD")
 
-    #pinnacle
-    PINNACLE_LOG: str = os.environ.get('PINNACLE_LOG')
-    PINNACLE_PASS: str = os.environ.get('PINNACLE_PASS')
-    
-    #tg bot
-    TG_BOT_KEY: str = os.environ.get('TG_BOT_KEY')
+    # pinnacle
+    PINNACLE_LOG: str = os.environ.get("PINNACLE_LOG")
+    PINNACLE_PASS: str = os.environ.get("PINNACLE_PASS")
+
+    # tg bot
+    TG_BOT_KEY: str = os.environ.get("TG_BOT_KEY")
+
+    # redis
+    REDIS_HOST: str = os.environ.get("REDIS_HOST")
+    REDIS_PORT: str = os.environ.get("REDIS_PORT")
 
     @property
     def DATABASE_URL(self):
-        return (f"postgresql+asyncpg://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}@{os.environ['DB_HOST']}:"
-                f"{os.environ['DB_PORT']}/{os.environ['POSTGRES_DB']}")
+        return (
+            f"postgresql+asyncpg://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}@{os.environ['DB_HOST']}:"
+            f"{os.environ['DB_PORT']}/{os.environ['POSTGRES_DB']}"
+        )
+
+    @property
+    def REDIS_URL(self):
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}"
 
 
 settings = Settings(_case_sensitive=False)
-

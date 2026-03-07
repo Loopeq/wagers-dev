@@ -6,54 +6,62 @@ from sqlalchemy import (
     Boolean,
     ForeignKey,
     Index,
-    text, UniqueConstraint,
+    text,
+    UniqueConstraint,
 )
-from src.core.db.base import (Base, str_128, str_64)
+from src.core.db.base import Base, str_128, str_64
 from sqlalchemy.orm import Mapped, mapped_column
 
 
 intpk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
-created_at = Annotated[datetime.datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))]
-updated_at = Annotated[datetime.datetime, mapped_column(
+created_at = Annotated[
+    datetime.datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))
+]
+updated_at = Annotated[
+    datetime.datetime,
+    mapped_column(
         server_default=text("TIMEZONE('utc', now())"),
         onupdate=datetime.datetime.utcnow,
-    )]
+    ),
+]
 
 
 class MatchResultEnum(enum.Enum):
-    win = 'win'
-    lose = 'lose'
+    win = "win"
+    lose = "lose"
 
 
 class MatchSideEnum(enum.Enum):
-    home = 'home'
-    away = 'away'
+    home = "home"
+    away = "away"
 
 
 class Sport(Base):
-    __tablename__ = 'sport'
+    __tablename__ = "sport"
 
     id: Mapped[intpk] = mapped_column(autoincrement=False)
     name: Mapped[str_64] = mapped_column(unique=True, nullable=False)
 
 
 class League(Base):
-    __tablename__ = 'league'
+    __tablename__ = "league"
 
     id: Mapped[intpk] = mapped_column(autoincrement=False)
-    sport_id: Mapped[int] = mapped_column(ForeignKey('sport.id'), nullable=False)
+    sport_id: Mapped[int] = mapped_column(ForeignKey("sport.id"), nullable=False)
     name: Mapped[str_128] = mapped_column(nullable=False)
     _table_args__ = (
-        UniqueConstraint('name', 'sport_id', name='uq_league_combination'),
+        UniqueConstraint("name", "sport_id", name="uq_league_combination"),
     )
 
 
 class Match(Base):
-    __tablename__ = 'match'
+    __tablename__ = "match"
 
     id: Mapped[intpk] = mapped_column(autoincrement=False)
-    parent_id: Mapped[int | None] = mapped_column(ForeignKey('match.id'), nullable=True, index=True)
-    league_id: Mapped[int] = mapped_column(ForeignKey('league.id'), nullable=False)
+    parent_id: Mapped[int | None] = mapped_column(
+        ForeignKey("match.id"), nullable=True, index=True
+    )
+    league_id: Mapped[int] = mapped_column(ForeignKey("league.id"), nullable=False)
     start_time: Mapped[datetime.datetime] = mapped_column(nullable=False, index=True)
     created_at: Mapped[created_at]
 
@@ -63,31 +71,43 @@ class Team(Base):
 
     id: Mapped[intpk]
     name: Mapped[str_64] = mapped_column(nullable=False)
-    league_id: Mapped[int] = mapped_column(ForeignKey('league.id', ondelete='CASCADE'), nullable=False, index=True)
+    league_id: Mapped[int] = mapped_column(
+        ForeignKey("league.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     __table_args__ = (
-        UniqueConstraint('name', 'league_id', name='uq_team_combination'),
+        UniqueConstraint("name", "league_id", name="uq_team_combination"),
     )
 
 
 class MatchMember(Base):
-    __tablename__ = 'match_member'
+    __tablename__ = "match_member"
 
     id: Mapped[intpk]
-    match_id: Mapped[int] = mapped_column(ForeignKey('match.id', ondelete='CASCADE'), nullable=False, index=True)
-    home_id: Mapped[int] = mapped_column(ForeignKey('team.id', ondelete='CASCADE'), nullable=False, index=True)
-    away_id: Mapped[int] = mapped_column(ForeignKey('team.id', ondelete='CASCADE'), nullable=False, index=True)
+    match_id: Mapped[int] = mapped_column(
+        ForeignKey("match.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    home_id: Mapped[int] = mapped_column(
+        ForeignKey("team.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    away_id: Mapped[int] = mapped_column(
+        ForeignKey("team.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     __table_args__ = (
-        UniqueConstraint('match_id', 'home_id', 'away_id', name='uq_match_member_combination'),
+        UniqueConstraint(
+            "match_id", "home_id", "away_id", name="uq_match_member_combination"
+        ),
     )
 
 
 class Bet(Base):
-    __tablename__ = 'bet'
+    __tablename__ = "bet"
 
     id: Mapped[intpk]
-    match_id: Mapped[int] = mapped_column(ForeignKey('match.id', ondelete='CASCADE'), nullable=False, index=True)
+    match_id: Mapped[int] = mapped_column(
+        ForeignKey("match.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     point: Mapped[float] = mapped_column(nullable=True)
     limit: Mapped[int] = mapped_column(nullable=False, default=0)
     home_cf: Mapped[float] = mapped_column(nullable=False)
@@ -99,11 +119,19 @@ class Bet(Base):
     version: Mapped[int] = mapped_column(nullable=False, default=1)
     created_at: Mapped[datetime.datetime] = mapped_column(nullable=False, index=True)
     __table_args__ = (
-        Index('idx_bet_latest_version', 'match_id', 'type', 'period', 'version', postgresql_ops={'version': 'desc'}),
+        Index(
+            "idx_bet_latest_version",
+            "match_id",
+            "type",
+            "period",
+            "version",
+            postgresql_ops={"version": "desc"},
+        ),
     )
 
+
 class User(Base):
-    __tablename__ = 'user'
+    __tablename__ = "user"
     email: Mapped[str] = mapped_column(primary_key=True, unique=True, nullable=False)
     password: Mapped[str] = mapped_column(nullable=False)
     session_id: Mapped[str] = mapped_column(nullable=True)
@@ -112,15 +140,14 @@ class User(Base):
     superuser: Mapped[bool] = mapped_column(nullable=False, default=False)
     created_at: Mapped[created_at]
 
+
 class InviteCode(Base):
-    __tablename__ = 'invite_code'
+    __tablename__ = "invite_code"
 
     id: Mapped[intpk]
     code: Mapped[str] = mapped_column(unique=True, index=True)
     user_email: Mapped[str | None] = mapped_column(
-        ForeignKey('user.email', ondelete='CASCADE'),
-        nullable=True,
-        index=True
+        ForeignKey("user.email", ondelete="CASCADE"), nullable=True, index=True
     )
     is_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[created_at]
@@ -129,50 +156,71 @@ class InviteCode(Base):
 
 class MatchResult(Base):
 
-    __tablename__ = 'match_result'
+    __tablename__ = "match_result"
 
     id: Mapped[intpk]
-    match_id: Mapped[int] = mapped_column(ForeignKey('match.id', ondelete='CASCADE'), nullable=False, index=True)
+    match_id: Mapped[int] = mapped_column(
+        ForeignKey("match.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     period: Mapped[int] = mapped_column(nullable=False, index=True)
     description: Mapped[str] = mapped_column(nullable=False, index=True)
     team_1_score: Mapped[int] = mapped_column(nullable=False)
     team_2_score: Mapped[int] = mapped_column(nullable=False)
 
     __table_args__ = (
-        UniqueConstraint('match_id', 'period', name='uq_match_result_combination'),
+        UniqueConstraint("match_id", "period", name="uq_match_result_combination"),
     )
 
 
-# Архивные таблицы 
+# Архивные таблицы
+
 
 class MatchArchive(Base):
-    __tablename__ = 'match_archive'
+    __tablename__ = "match_archive"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    parent_id: Mapped[int | None] = mapped_column(ForeignKey('match_archive.id'), nullable=True, index=True)
-    league_id: Mapped[int] = mapped_column(ForeignKey('league.id'), nullable=False)
+    parent_id: Mapped[int | None] = mapped_column(
+        ForeignKey("match_archive.id"), nullable=True, index=True
+    )
+    league_id: Mapped[int] = mapped_column(ForeignKey("league.id"), nullable=False)
     start_time: Mapped[datetime.datetime] = mapped_column(nullable=False, index=True)
     created_at: Mapped[datetime.datetime] = mapped_column(nullable=False)
-    archived_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow, nullable=False)
-
-class MatchMemberArchive(Base):
-    __tablename__ = 'match_member_archive'
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    match_id: Mapped[int] = mapped_column(ForeignKey('match_archive.id', ondelete='CASCADE'), nullable=False, index=True)
-    home_id: Mapped[int] = mapped_column(ForeignKey('team.id', ondelete='CASCADE'), nullable=False, index=True)
-    away_id: Mapped[int] = mapped_column(ForeignKey('team.id', ondelete='CASCADE'), nullable=False, index=True)
-    archived_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow, nullable=False)
-
-    __table_args__ = (
-        UniqueConstraint('match_id', 'home_id', 'away_id', name='uq_match_member_archive_combination'),
+    archived_at: Mapped[datetime.datetime] = mapped_column(
+        default=datetime.datetime.utcnow, nullable=False
     )
 
-class BetArchive(Base):
-    __tablename__ = 'bet_archive'
+
+class MatchMemberArchive(Base):
+    __tablename__ = "match_member_archive"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    match_id: Mapped[int] = mapped_column(ForeignKey('match_archive.id', ondelete='CASCADE'), nullable=False, index=True)
+    match_id: Mapped[int] = mapped_column(
+        ForeignKey("match_archive.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    home_id: Mapped[int] = mapped_column(
+        ForeignKey("team.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    away_id: Mapped[int] = mapped_column(
+        ForeignKey("team.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    archived_at: Mapped[datetime.datetime] = mapped_column(
+        default=datetime.datetime.utcnow, nullable=False
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "match_id", "home_id", "away_id", name="uq_match_member_archive_combination"
+        ),
+    )
+
+
+class BetArchive(Base):
+    __tablename__ = "bet_archive"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    match_id: Mapped[int] = mapped_column(
+        ForeignKey("match_archive.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     point: Mapped[float] = mapped_column(nullable=True)
     limit: Mapped[int] = mapped_column(nullable=False, default=0)
     home_cf: Mapped[float] = mapped_column(nullable=False)
@@ -183,23 +231,39 @@ class BetArchive(Base):
     key: Mapped[str] = mapped_column(nullable=False)
     version: Mapped[int] = mapped_column(nullable=False, default=1)
     created_at: Mapped[datetime.datetime] = mapped_column(nullable=False, index=True)
-    archived_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow, nullable=False)
-
-    __table_args__ = (
-        Index('idx_bet_archive_latest_version', 'match_id', 'type', 'period', 'version', postgresql_ops={'version': 'desc'}),
+    archived_at: Mapped[datetime.datetime] = mapped_column(
+        default=datetime.datetime.utcnow, nullable=False
     )
 
+    __table_args__ = (
+        Index(
+            "idx_bet_archive_latest_version",
+            "match_id",
+            "type",
+            "period",
+            "version",
+            postgresql_ops={"version": "desc"},
+        ),
+    )
+
+
 class MatchResultArchive(Base):
-    __tablename__ = 'match_result_archive'
+    __tablename__ = "match_result_archive"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    match_id: Mapped[int] = mapped_column(ForeignKey('match_archive.id', ondelete='CASCADE'), nullable=False, index=True)
+    match_id: Mapped[int] = mapped_column(
+        ForeignKey("match_archive.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     period: Mapped[int] = mapped_column(nullable=False, index=True)
     description: Mapped[str] = mapped_column(nullable=False, index=True)
     team_1_score: Mapped[int] = mapped_column(nullable=False)
     team_2_score: Mapped[int] = mapped_column(nullable=False)
-    archived_at: Mapped[datetime.datetime] = mapped_column(default=datetime.datetime.utcnow, nullable=False)
+    archived_at: Mapped[datetime.datetime] = mapped_column(
+        default=datetime.datetime.utcnow, nullable=False
+    )
 
     __table_args__ = (
-        UniqueConstraint('match_id', 'period', name='uq_match_result_archive_combination'),
+        UniqueConstraint(
+            "match_id", "period", name="uq_match_result_archive_combination"
+        ),
     )

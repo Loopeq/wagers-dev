@@ -1,4 +1,3 @@
-
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
@@ -13,7 +12,7 @@ async def get_sports(session: AsyncSession):
         .where(Match.start_time > datetime.utcnow())
         .group_by(Sport.id, Sport.name)
     )
-    
+
     result = await session.execute(stmt)
     return [{"id": r[0], "name": r[1], "match_count": r[2]} for r in result]
 

@@ -5,17 +5,35 @@ from src.core.crud.parser.match import archive_and_clear_matches
 from src.parser.config import sports
 import asyncio
 
-@celery_app.task
-def run_collect_heads():
-    import asyncio
+
+@celery_app.task(
+    name="run_collect_heads",
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 3},
+)
+def run_collect_heads(self):
     asyncio.run(collect_heads(sports=sports))
 
-@celery_app.task
-def run_collect_content():
-    import asyncio
+
+@celery_app.task(
+    name="run_collect_content",
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 3},
+)
+def run_collect_content(self):
     asyncio.run(collect_content())
 
-@celery_app.task
-def run_archive_matches():
-    import asyncio
+
+@celery_app.task(
+    name="run_archive_matches",
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 3},
+)
+def run_archive_matches(self):
     asyncio.run(archive_and_clear_matches())

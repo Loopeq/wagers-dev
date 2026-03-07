@@ -18,11 +18,11 @@ async def login_for_access_token(
 ):
     invite = await InviteCodeOrm.get_by_code(form_data.invite_code, session)
     if not invite or invite.is_used:
-        raise HTTPException(status_code=400, detail='Invalid invite code')
+        raise HTTPException(status_code=400, detail="Invalid invite code")
 
     existing_user = await UserOrm.get_user_by_email(form_data.email, session)
     if existing_user:
-        raise HTTPException(status_code=409, detail='User already exists')
+        raise HTTPException(status_code=409, detail="User already exists")
 
     user = await UserOrm.create_user(
         email=form_data.email,
@@ -31,6 +31,5 @@ async def login_for_access_token(
     )
 
     await InviteCodeOrm.mark_used(invite, user.email, session)
-    
-    return user
 
+    return user

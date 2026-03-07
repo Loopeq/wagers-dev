@@ -1,4 +1,3 @@
-
 from collections import defaultdict
 from src.core.models import Bet
 from src.core.schemas import BetAddDTO
@@ -12,27 +11,25 @@ def process_changes(bets: list[dict]):
 def group_bets(mapped_changes: list[dict[str]]) -> list[list[dict[str]]]:
     grouped_changes = defaultdict(list)
     for change in mapped_changes:
-        key = (change['period'], change['type'], change['relation_type'], change['key'])
+        key = (change["period"], change["type"], change["relation_type"], change["key"])
         grouped_changes[key].append(change)
 
     all_pairs = []
     for group in grouped_changes.values():
-        sorted_group = sorted(group, key=lambda x: x['created_at'])
+        sorted_group = sorted(group, key=lambda x: x["created_at"])
 
         pairs = [
-            [sorted_group[i], sorted_group[i + 1]]
-            for i in range(len(sorted_group) - 1)
+            [sorted_group[i], sorted_group[i + 1]] for i in range(len(sorted_group) - 1)
         ]
 
         all_pairs.extend(pairs)
 
     all_pairs_sorted = sorted(
-        all_pairs,
-        key=lambda pair: pair[-1]['created_at'],
-        reverse=True
+        all_pairs, key=lambda pair: pair[-1]["created_at"], reverse=True
     )
 
     return all_pairs_sorted
+
 
 def extract_latest(bets: list[Bet]):
     if not bets:

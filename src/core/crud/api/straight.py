@@ -8,40 +8,45 @@ from src.core.models import Bet, Match, League, MatchMember, Team, MatchResult
 async def get_match(match_id: int, session: AsyncSession):
     home_team = aliased(Team)
     away_team = aliased(Team)
-    query = (select(Match.id,
-                    Match.league_id,
-                    Match.start_time,
-                    League.name,
-                    League.sport_id,
-                    home_team.id.label("home_member_id"),
-                    away_team.id.label("away_member_id"),
-                    home_team.name.label('home_name'),
-                    away_team.name.label('away_name'))
-             .select_from(Match)
-             .outerjoin(League, League.id == Match.league_id)
-             .outerjoin(MatchMember, MatchMember.match_id == Match.id)
-             .outerjoin(home_team, MatchMember.home_id == home_team.id)
-             .outerjoin(away_team, MatchMember.away_id == away_team.id)
-             .filter(Match.id == match_id)
-             )
+    query = (
+        select(
+            Match.id,
+            Match.league_id,
+            Match.start_time,
+            League.name,
+            League.sport_id,
+            home_team.id.label("home_member_id"),
+            away_team.id.label("away_member_id"),
+            home_team.name.label("home_name"),
+            away_team.name.label("away_name"),
+        )
+        .select_from(Match)
+        .outerjoin(League, League.id == Match.league_id)
+        .outerjoin(MatchMember, MatchMember.match_id == Match.id)
+        .outerjoin(home_team, MatchMember.home_id == home_team.id)
+        .outerjoin(away_team, MatchMember.away_id == away_team.id)
+        .filter(Match.id == match_id)
+    )
     result = await session.execute(query)
     match = result.fetchone()
-    match_dto = {"match_id": match[0],
-                 "league_id": match[1],
-                 "start_time": match[2],
-                 "league_name": match[3],
-                 "sport_id": match[4],
-                 "home_team_id": match[5],
-                 "away_team_id": match[6],
-                 "home_name": match[7],
-                 "away_name": match[8]}
+    match_dto = {
+        "match_id": match[0],
+        "league_id": match[1],
+        "start_time": match[2],
+        "league_name": match[3],
+        "sport_id": match[4],
+        "home_team_id": match[5],
+        "away_team_id": match[6],
+        "home_name": match[7],
+        "away_name": match[8],
+    }
 
     result_query = (
         select(
             MatchResult.period,
             MatchResult.description,
             MatchResult.team_1_score,
-            MatchResult.team_2_score
+            MatchResult.team_2_score,
         )
         .where(MatchResult.match_id == match_id)
         .order_by(MatchResult.period)
@@ -60,8 +65,7 @@ async def get_match(match_id: int, session: AsyncSession):
         for r in results
     ]
 
-    return {"match": match_dto,
-            "match_results": match_results}
+    return {"match": match_dto, "match_results": match_results}
 
 
 async def get_changes(match_ids: list, periods: list | None, session: AsyncSession):
@@ -83,12 +87,11 @@ async def get_changes(match_ids: list, periods: list | None, session: AsyncSessi
 async def get_initial_last_points(match_id: int, child_id: int, session: AsyncSession):
     max_version_subq = (
         select(
-            Bet.period,
-            Bet.type,
-            Bet.key,
-            func.max(Bet.version).label("max_version")
+            Bet.period, Bet.type, Bet.key, func.max(Bet.version).label("max_version")
         )
-        .filter(or_(Bet.match_id == match_id, Bet.match_id == child_id), Bet.version != 0)
+        .filter(
+            or_(Bet.match_id == match_id, Bet.match_id == child_id), Bet.version != 0
+        )
         .group_by(Bet.period, Bet.type, Bet.key)
         .subquery()
     )
@@ -101,23 +104,17 @@ async def get_initial_last_points(match_id: int, child_id: int, session: AsyncSe
             max_version_subq,
             and_(
                 bet_alias.period == max_version_subq.c.period,
-                bet_alias.type == max_version_subq.c.type
-            )
+                bet_alias.type == max_version_subq.c.type,
+            ),
         )
         .filter(
-            or_(
-                bet_alias.match_id == match_id,
-                bet_alias.match_id == child_id 
-            ),
+            or_(bet_alias.match_id == match_id, bet_alias.match_id == child_id),
             or_(
                 bet_alias.version == 0,
-                bet_alias.version == max_version_subq.c.max_version
-            )
+                bet_alias.version == max_version_subq.c.max_version,
+            ),
         )
-        .order_by(
-            bet_alias.type,
-            bet_alias.period
-        )
+        .order_by(bet_alias.type, bet_alias.period)
     )
 
     result = await session.execute(query)
@@ -128,7 +125,7 @@ async def get_initial_last_points(match_id: int, child_id: int, session: AsyncSe
         bet.pop("_sa_instance_state", None)
     grouped_bets = {}
     for bet in bets:
-        key = (bet['match_id'], bet["period"], bet["type"], bet["key"])
+        key = (bet["match_id"], bet["period"], bet["type"], bet["key"])
         if key not in grouped_bets:
             grouped_bets[key] = []
         grouped_bets[key].append(bet)
@@ -148,11 +145,7 @@ async def get_team_games(team_id: int, current_match_id: int, session: AsyncSess
     HomeTeam = aliased(Team)
     AwayTeam = aliased(Team)
     child_match = aliased(Match)
-    match_result_subq = (
-        select(MatchResult)
-        .where(MatchResult.period == 0)
-        .subquery()
-    )
+    match_result_subq = select(MatchResult).where(MatchResult.period == 0).subquery()
     count_case = func.count(case((Bet.version >= 1, Bet.id), else_=None))
     stmt = (
         select(
@@ -168,29 +161,38 @@ async def get_team_games(team_id: int, current_match_id: int, session: AsyncSess
             match_result_subq.c.description.label("result_title"),
             match_result_subq.c.team_1_score.label("home_score"),
             match_result_subq.c.team_2_score.label("away_score"),
-            count_case.label('change_count')
+            count_case.label("change_count"),
         )
         .join(MatchMember, Match.id == MatchMember.match_id)
         .join(League, League.id == Match.league_id)
         .join(HomeTeam, HomeTeam.id == MatchMember.home_id)
         .join(AwayTeam, AwayTeam.id == MatchMember.away_id)
         .outerjoin(Bet, Bet.match_id == Match.id)
-        .outerjoin(match_result_subq, match_result_subq.c.match_id == MatchMember.match_id)
+        .outerjoin(
+            match_result_subq, match_result_subq.c.match_id == MatchMember.match_id
+        )
         .outerjoin(child_match, child_match.parent_id == Match.id)
         .filter(
             or_(
                 MatchMember.home_id == team_id,
                 MatchMember.away_id == team_id,
             ),
-            Match.id != current_match_id
+            Match.id != current_match_id,
         )
         .order_by(Match.start_time.desc())
-        .group_by(Match.id, League.name, HomeTeam.name, AwayTeam.name,
-                  HomeTeam.id, AwayTeam.id, child_match.id,
-                  match_result_subq.c.description,
-                  match_result_subq.c.team_1_score,
-                  match_result_subq.c.team_2_score,
-                  match_result_subq.c.team_2_score)
+        .group_by(
+            Match.id,
+            League.name,
+            HomeTeam.name,
+            AwayTeam.name,
+            HomeTeam.id,
+            AwayTeam.id,
+            child_match.id,
+            match_result_subq.c.description,
+            match_result_subq.c.team_1_score,
+            match_result_subq.c.team_2_score,
+            match_result_subq.c.team_2_score,
+        )
     )
 
     result = await session.execute(stmt)

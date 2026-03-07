@@ -18,7 +18,13 @@ class Response:
     headers: Optional[dict] = None
 
 
-async def get_request(url: str, headers: dict, params: dict = None, cookies: dict = None, use_proxy: bool = True) -> Response:
+async def get_request(
+    url: str,
+    headers: dict,
+    params: dict = None,
+    cookies: dict = None,
+    use_proxy: bool = True,
+) -> Response:
     connector = TCPConnector(limit=2000)
     async with aiohttp.ClientSession(connector=connector, cookies=cookies) as session:
         for _ in range(max_retries):
@@ -26,18 +32,20 @@ async def get_request(url: str, headers: dict, params: dict = None, cookies: dic
             if use_proxy:
                 proxy = pm.proxy
             try:
-                async with session.get(url,
-                                       headers=headers,
-                                       params=params,
-                                       proxy=proxy,
-                                       timeout=5) as resp:
+                async with session.get(
+                    url, headers=headers, params=params, proxy=proxy, timeout=5
+                ) as resp:
                     ctype = resp.headers.get("Content-Type", "").lower()
                     if resp.status == 200:
-                        if 'application/json' in ctype:
+                        if "application/json" in ctype:
                             response = await resp.json()
-                        else: 
+                        else:
                             response = await resp.text()
-                        return Response(status=resp.status, data=response, headers=dict(resp.headers))
+                        return Response(
+                            status=resp.status,
+                            data=response,
+                            headers=dict(resp.headers),
+                        )
                     elif resp.status == 404:
                         return Response(status=resp.status)
             except (aiohttp.ContentTypeError, TimeoutError, aiohttp.ClientError):
