@@ -8,7 +8,6 @@ from src.core.models import MatchSideEnum
 class SportDTO(BaseModel):
     id: int
     name: str
-    name_ru: str
     match_count: int
 
 

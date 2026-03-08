@@ -4,10 +4,6 @@ from fastapi import HTTPException
 from collections import defaultdict
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.utils import get_period_title
-from src.core.crud.api.straight import get_team_games
-import json
-from src.analyzer.analyzer import get_analyzed
-
 
 def group_and_pair_bets(mapped_changes: list[dict[str]]) -> list[list[dict[str]]]:
     grouped_changes = defaultdict(list)
@@ -130,52 +126,3 @@ async def get_straight(match_id: int, child_id: int, session: AsyncSession):
         "comparison": mapped_comparison,
         "periods": unique_periods,
     }
-
-
-async def get_straight_full_history(
-    match_id: int, child_id: int, session: AsyncSession
-):
-    default_straight = await get_straight(
-        match_id=match_id, child_id=child_id, session=session
-    )
-    default_straight["match_result"] = None
-    current_match_id = default_straight["match"]["match_id"]
-    home_id = default_straight["match"]["home_team_id"]
-    away_id = default_straight["match"]["away_team_id"]
-    home_name = default_straight["match"]["home_name"]
-    away_name = default_straight["match"]["away_name"]
-
-    home_history = await get_team_games(
-        team_id=home_id, current_match_id=current_match_id, session=session
-    )
-    away_history = await get_team_games(
-        team_id=away_id, current_match_id=current_match_id, session=session
-    )
-
-    for home_event in home_history:
-        event_id = home_event["id"]
-        event_child_id = home_event["child_id"]
-        event_straight = await get_straight(
-            match_id=event_id, child_id=event_child_id, session=session
-        )
-        home_event["straight"] = event_straight
-
-    for away_event in away_history:
-        event_id = away_event["id"]
-        event_child_id = away_event["child_id"]
-        event_straight = await get_straight(
-            match_id=event_id, child_id=event_child_id, session=session
-        )
-        away_event["straight"] = event_straight
-
-    full_history = {
-        **default_straight,
-        "home_history": home_history,
-        "away_history": away_history,
-    }
-    tool_call_query = f"{home_name} vs {away_name} tennis"
-    full_history_dump = json.dumps(full_history, default=str)
-    analyzed = await get_analyzed(
-        content=full_history_dump, tool_call_query=tool_call_query
-    )
-    return analyzed
