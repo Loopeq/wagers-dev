@@ -66,6 +66,9 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
+    env_file:
+      - .env
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     restart: always
     ports:
       - 6379:6379
@@ -74,50 +77,17 @@ services:
     networks:
       - web
 
-  celery_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: celery_worker
+  arq:
+    build: .
+    command: arq src.worker.worker.WorkerSettings
+    depends_on:
+      - web
+      - redis
     env_file:
       - .env
-    depends_on:
-      - redis
-      - db
-      - web
-    command: celery -A src.parser.worker.app.celery_app worker --loglevel=ERROR
-    volumes:
-      - ./src:/code/src
-      - ./logs:/code/logs
-      - ./data:/code/data
-    environment:
-      - PYTHONUNBUFFERED=1
-      - LOG_LEVEL=ERROR
     networks:
       - web
-
-  celery_beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: celery_beat
-    env_file:
-      - .env
-    depends_on:
-      - redis
-      - db
-      - web
-    command: celery -A src.parser.worker.app.celery_app beat --loglevel=INFO
-    volumes:
-      - ./src:/code/src
-      - ./logs:/code/logs
-      - ./data:/code/data
-    environment:
-      - PYTHONUNBUFFERED=1
-      - LOG_LEVEL=INFO
-    networks:
-      - web
-
+  
 volumes:
   postgres-data:
   pgadmin-data:

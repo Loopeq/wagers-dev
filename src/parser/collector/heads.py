@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 from collections import defaultdict, deque
-from src.requests.matchups import get_match_up_response
+from src.parser.client.heads import get_heads
 from src.core.models import League, Match, Team
 from src.parser.utils.common import iso_to_utc
 from src.core.crud.parser.match import (
@@ -127,7 +127,7 @@ async def process_match(event: dict, existing_ids: list) -> int:
 
 async def collect_heads(sports: dict[str, int]):
     responses = await asyncio.gather(
-        *(get_match_up_response(event_id=sports[name]) for name in sports)
+        *(get_heads(event_id=sports[name]) for name in sports)
     )
 
     tasks = [

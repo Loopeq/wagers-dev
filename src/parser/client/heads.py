@@ -1,4 +1,4 @@
-from src.requests.base import get_request
+from src.parser.client.base import get_request
 from src.core.logger import get_module_logger
 import asyncio
 
@@ -24,12 +24,8 @@ URL = "https://guest.api.arcadia.pinnacle.com/0.1/sports/{0}/matchups"
 logger = get_module_logger(__name__)
 
 
-async def get_match_up_response(event_id: int):
+async def get_heads(event_id: int):
     response = await get_request(url=URL.format(event_id), headers=HEADERS)
     if response.status != 200:
         logger.error(f"Error fetching {URL.format(event_id)}")
     return response
-
-
-if __name__ == "__main__":
-    asyncio.run(get_match_up_response(33))

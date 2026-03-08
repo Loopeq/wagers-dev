@@ -1,5 +1,5 @@
 from src.core.logger import get_module_logger
-from src.requests.base import get_request
+from src.parser.client.base import get_request
 
 HEADERS = {
     "sec-ch-ua": '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',
@@ -20,7 +20,7 @@ URL = "https://guest.api.arcadia.pinnacle.com/0.1/matchups/{0}/markets/related/s
 logger = get_module_logger(__name__)
 
 
-async def get_straight_response(match_id: int):
+async def get_straight(match_id: int):
     response = await get_request(url=URL.format(match_id), headers=HEADERS)
     if response.status != 200:
         logger.error(f"Error fetching {URL.format(match_id)}")

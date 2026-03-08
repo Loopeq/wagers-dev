@@ -9,7 +9,7 @@ from src.core.crud.parser.bet import (
 )
 from src.core.utils import format_key
 from src.parser.config import sports, sports_ids
-from src.requests.straight import get_straight_response
+from src.parser.client.straight import get_straight
 from src.core.schemas import MatchUpcomingDTO, BetAddDTO
 from src.parser.utils.common import calc_coeff
 from src.scripts.bet_clusters import extract_latest, is_int_or_half
@@ -37,7 +37,7 @@ async def extract_bet_content(
 ):
     bets = []
     seen_bets = set()
-    content_response = await get_straight_response(match_id=match.id)
+    content_response = await get_straight(match_id=match.id)
     all_event_bets = await get_event_bets(match_id=match.id)
     latest_bets = extract_latest(all_event_bets)
     if content_response.status == 404 or match.start_time < response_date:

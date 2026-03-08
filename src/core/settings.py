@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     # redis
     REDIS_HOST: str = os.environ.get("REDIS_HOST")
     REDIS_PORT: str = os.environ.get("REDIS_PORT")
+    REDIS_PASSWORD: str = os.environ.get("REDIS_PASSWORD")
 
     @property
     def DATABASE_URL(self):
@@ -41,10 +42,5 @@ class Settings(BaseSettings):
             f"postgresql+asyncpg://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}@{os.environ['DB_HOST']}:"
             f"{os.environ['DB_PORT']}/{os.environ['POSTGRES_DB']}"
         )
-
-    @property
-    def REDIS_URL(self):
-        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}"
-
 
 settings = Settings(_case_sensitive=False)
