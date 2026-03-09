@@ -19,7 +19,6 @@ async def release_invite_code(
     code = await InviteCodeOrm.release_code(session=session)
     return code
 
-
 @router.get("/users", response_model=List[UserOutAdmin])
 async def get_users(
     admin_user: CURRENT_ADMIN_USER,
