@@ -16,7 +16,6 @@ from src.scripts.bet_clusters import extract_latest, is_int_or_half
 
 logger = get_module_logger(__name__)
 
-
 async def collect_content():
     matches = await get_upcoming_matches()
     response_date = datetime.datetime.utcnow()

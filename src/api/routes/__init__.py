@@ -1,7 +1,7 @@
 from fastapi.routing import APIRouter
-from src.api.endpoints.admin import router as admin_router
-from src.api.endpoints.market import router as market_router
-from src.api.endpoints.user import router as user_router
+from src.api.routes.admin import router as admin_router
+from src.api.routes.market import router as market_router
+from src.api.routes.user import router as user_router
 
 router = APIRouter(prefix="/v1")
 

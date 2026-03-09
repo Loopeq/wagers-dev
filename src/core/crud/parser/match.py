@@ -108,41 +108,6 @@ async def get_upcoming_matches(sport_id: int = None, include_parents: bool = Tru
         return matches_dto
 
 
-async def add_match_results(match_results: List[MatchResultDTO]):
-    async with db_helper.session_factory() as session:
-        ids = [match_result.match_id for match_result in match_results]
-        existing_ids_result = await session.execute(
-            select(Match.id).filter(
-                Match.id.in_(ids), ~Match.id.in_(select(MatchResult.match_id))
-            )
-        )
-        existing_ids = existing_ids_result.scalars().all()
-        valid_results = [
-            match for match in match_results if match.match_id in existing_ids
-        ]
-        if not valid_results:
-            return
-        stmt = (
-            insert(MatchResult)
-            .values(
-                [
-                    {
-                        "match_id": int(r.match_id),
-                        "period": r.period,
-                        "description": r.description,
-                        "team_1_score": r.team_1_score,
-                        "team_2_score": r.team_2_score,
-                    }
-                    for r in valid_results
-                ]
-            )
-            .on_conflict_do_nothing(index_elements=["match_id", "period"])
-        )
-
-        await session.execute(stmt)
-        await session.commit()
-
-
 async def bulk_insert(session, model, objects):
     BATCH_SIZE = 1000
     for i in range(0, len(objects), BATCH_SIZE):
