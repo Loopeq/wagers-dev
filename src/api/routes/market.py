@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
+import json
 import math
 from typing import Annotated
 from curl_cffi import AsyncSession
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy import asc, case, desc, distinct, func, or_, select
 from sqlalchemy.orm import aliased
 from src.api.repositories.straight import get_straight
@@ -11,9 +13,24 @@ from src.core.db.db_helper import db_helper
 from src.api.dependencies import CURRENT_ACTIVE_USER
 from src.core.models import Bet, League, Match, MatchMember, Sport, Team
 from src.core.schemas import SportDTO
+import asyncio
 
 router = APIRouter(prefix="/market", tags=["Market"])
 
+async def event_generator():
+    counter = 0
+    while counter < 10:
+        data = {'message': f'ping {counter}'}
+        yield f"data: {json.dumps(data)}\n\n"
+        counter += 1
+        await asyncio.sleep(1)
+
+@router.get('/ping')
+async def ping():
+    return StreamingResponse(
+        event_generator(),
+        media_type='text/event-stream'
+    )
 
 @router.get("/sports", response_model=list[SportDTO])
 async def load_sports(

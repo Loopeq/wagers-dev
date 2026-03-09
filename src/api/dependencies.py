@@ -5,10 +5,10 @@ from fastapi import Depends, HTTPException
 from jwt import InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.crud.api.user import UserOrm
 from src.core.db.db_helper import db_helper
 from src.core.schemas import TokenData, UserOut
 from src.core.security import ALGORITHM, SECRET_KEY, get_token_from_cookie
+from src.repositories.user_repository import UserRepository
 
 
 async def get_current_user(
@@ -31,7 +31,7 @@ async def get_current_user(
     except InvalidTokenError:
         raise credentials_exception
 
-    user = await UserOrm.get_user_by_email(email=token_data.email, session=session)
+    user = await UserRepository.get_by_email(email=token_data.email, session=session)
     if user is None:
         raise credentials_exception
 

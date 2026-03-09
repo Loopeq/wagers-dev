@@ -15,8 +15,7 @@ services:
       - ./src:/code/src
       - .env:/code/.env
       - ./logs:/code/logs
-      - ./data:/code/data
-      - ./playwright:/code/playwright
+      - ./storage:/code/storage
       - ./migrations:/code/migrations
     environment:
       - PYTHONUNBUFFERED=1

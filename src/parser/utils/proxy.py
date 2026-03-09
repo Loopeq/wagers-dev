@@ -1,7 +1,7 @@
 import itertools
 import logging
 from collections import namedtuple
-from src.core.settings import settings as conf
+from src.settings import settings as conf
 import requests
 
 
@@ -21,7 +21,7 @@ class ProxyManager:
     def __init__(self):
         self._proxy_list = self._get_proxies(10)
         if not len(self._proxy_list):
-            with open("data/proxies.txt") as f:
+            with open("storage/proxies.txt") as f:
                 for pr in f.readlines():
                     pr_strip = pr.rstrip("\n")
                     ip, port, username, password = pr_strip.split(":")

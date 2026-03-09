@@ -4,9 +4,9 @@ from fastapi import HTTPException, Request, status
 import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.crud.api.user import UserOrm
+from src.repositories.user_repository import UserRepository
 from src.core.utils import verify_password
-from src.core.settings import settings
+from src.settings import settings
 
 SECRET_KEY = settings.AUTH_SECRET
 ALGORITHM = settings.AUTH_ALGORITHM
@@ -14,7 +14,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = settings.AUTH_EXPIRE_TOKEN_HOURS * 60
 
 
 async def authenticate_user(email: str, password: str, session: AsyncSession):
-    user = await UserOrm.get_user_by_email(email, session)
+    user = await UserRepository.get_by_email(email, session)
     if user is None:
         return False
     if not verify_password(password, user.password):

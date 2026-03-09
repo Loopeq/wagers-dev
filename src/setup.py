@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 
-from src.core.settings import settings
+from src.settings import settings
 
 
 def lifespan_factory():
