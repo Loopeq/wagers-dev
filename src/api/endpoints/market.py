@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import asc, case, desc, distinct, func, or_, select
 from sqlalchemy.orm import aliased
 from src.api.repositories.straight import get_straight
+from src.core.crud.api.straight import get_team_games
 from src.core.db.db_helper import db_helper
 from src.api.dependencies import CURRENT_ACTIVE_USER
 from src.core.models import Bet, League, Match, MatchMember, Sport, Team
@@ -13,17 +14,14 @@ from src.core.schemas import SportDTO
 
 router = APIRouter(prefix="/market", tags=["Market"])
 
+
 @router.get("/sports", response_model=list[SportDTO])
 async def load_sports(
     current_user: CURRENT_ACTIVE_USER,
     session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
 ):
     stmt = (
-        select(
-            Sport.id, 
-            Sport.name, 
-            func.count(Match.id).label("match_count")
-        )
+        select(Sport.id, Sport.name, func.count(Match.id).label("match_count"))
         .outerjoin(League, League.sport_id == Sport.id)
         .outerjoin(Match, Match.league_id == League.id)
         .where(Match.start_time > datetime.utcnow())
@@ -36,6 +34,7 @@ async def load_sports(
         {"id": s.id, "name": s.name.title(), "match_count": s.match_count}
         for s in result.all()
     ]
+
 
 @router.get("/related")
 async def get_related(
@@ -62,7 +61,9 @@ async def get_related(
             func.count(distinct(Match.id)).label("upcoming_matches_with_changes"),
         )
         .outerjoin(Match, League.id == Match.league_id)
-        .outerjoin(bet_match, or_(bet_match.id == Match.id, bet_match.parent_id == Match.id))
+        .outerjoin(
+            bet_match, or_(bet_match.id == Match.id, bet_match.parent_id == Match.id)
+        )
         .outerjoin(bet, bet.match_id == bet_match.id)
         .filter(Match.start_time > utc_now, Match.parent_id.is_(None), bet.version >= 1)
         .group_by(League.sport_id)
@@ -96,7 +97,9 @@ async def get_related(
         .outerjoin(home_team, MatchMember.home_id == home_team.id)
         .outerjoin(away_team, MatchMember.away_id == away_team.id)
         .outerjoin(child_match, child_match.parent_id == Match.id)
-        .outerjoin(bet_match, or_(bet_match.id == Match.id, bet_match.parent_id == Match.id))
+        .outerjoin(
+            bet_match, or_(bet_match.id == Match.id, bet_match.parent_id == Match.id)
+        )
         .outerjoin(bet, bet.match_id == bet_match.id)
         .filter(League.sport_id == sport_id, Match.parent_id.is_(None))
         .group_by(
@@ -114,7 +117,9 @@ async def get_related(
 
     if league_id:
         query = query.filter(League.id == league_id)
-    query = query.filter(Match.start_time >= utc_now if not finished else Match.start_time < utc_now)
+    query = query.filter(
+        Match.start_time >= utc_now if not finished else Match.start_time < utc_now
+    )
     if hours:
         query = query.filter(Match.start_time < utc_now + timedelta(hours=hours))
     if not nulls:
@@ -128,7 +133,9 @@ async def get_related(
         "start_time": Match.start_time,
     }
     sort_col = sort_map.get(sort_by, home_team.name)
-    query = query.order_by(asc(sort_col) if sort_order.upper() == "ASC" else desc(sort_col))
+    query = query.order_by(
+        asc(sort_col) if sort_order.upper() == "ASC" else desc(sort_col)
+    )
 
     results = (await session.execute(query)).fetchall()
 
@@ -171,3 +178,21 @@ async def load_straight(
 ):
     straight = await get_straight(match_id=match_id, child_id=child_id, session=session)
     return straight
+
+
+@router.get("/history")
+async def get_history(
+    current_user: CURRENT_ACTIVE_USER,
+    session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
+    home_id: int,
+    away_id: int,
+    current_match_id: int,
+):
+    home_history = await get_team_games(
+        team_id=home_id, current_match_id=current_match_id, session=session
+    )
+    away_history = await get_team_games(
+        team_id=away_id, current_match_id=current_match_id, session=session
+    )
+
+    return {"home": home_history, "away": away_history}

@@ -43,4 +43,5 @@ class Settings(BaseSettings):
             f"{os.environ['DB_PORT']}/{os.environ['POSTGRES_DB']}"
         )
 
+
 settings = Settings(_case_sensitive=False)

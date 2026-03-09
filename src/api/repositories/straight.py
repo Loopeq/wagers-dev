@@ -5,6 +5,7 @@ from collections import defaultdict
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.utils import get_period_title
 
+
 def group_and_pair_bets(mapped_changes: list[dict[str]]) -> list[list[dict[str]]]:
     grouped_changes = defaultdict(list)
     for change in mapped_changes:
