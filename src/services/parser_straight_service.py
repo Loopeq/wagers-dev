@@ -9,7 +9,7 @@ from src.core.schemas import BetAddDTO, MatchUpcomingDTO
 from src.core.utils import format_key
 from src.parser.client.straight import get_straight
 from src.parser.config import sports, sports_ids
-from src.parser.utils.common import calc_coeff
+from src.core.utils import calc_coeff
 from src.repositories.bet_repository import BetRepository
 from src.scripts.bet_clusters import extract_latest, is_int_or_half
 

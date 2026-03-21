@@ -5,18 +5,29 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from src.core.models import League, Match, MatchMember, Team, MatchResult, Bet
+from src.core.schemas import MatchUpcomingDTO
 
 
 class MatchRepository:
     @staticmethod
     async def get_upcoming_matches(session: AsyncSession):
         stmt = (
-            select(Match)
+            select(Match, League.sport_id)
+            .join(League, League.id == Match.league_id)
             .where(Match.start_time > datetime.utcnow())
             .order_by(Match.start_time.asc())
         )
         result = await session.execute(stmt)
-        return result.scalars().all()
+        rows = result.all()
+        
+        matches = []
+
+        for match, sport_id in rows:
+            match.sport_id = sport_id
+            matches.append(match)
+        
+        return matches
+
 
     @staticmethod
     async def get_match_with_teams(match_id: int, session: AsyncSession) -> dict | None:

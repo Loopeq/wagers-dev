@@ -3,6 +3,8 @@ from src.core.constants import PERIODS
 from src.parser.config import sports_ids
 from datetime import timedelta, datetime
 import secrets
+import datetime
+import pytz
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -35,3 +37,38 @@ def get_yesterday_ymd():
 
 def generate_invite_code(length: int = 12):
     return secrets.token_urlsafe(length)[:length]
+
+
+def iso_to_utc(iso_str: str):
+    return datetime.datetime.fromisoformat(iso_str.replace("Z", ""))
+
+
+def gmt_to_utc(gmt_str: str):
+    return datetime.datetime.strptime(gmt_str, "%a, %d %b %Y %H:%M:%S GMT").replace(
+        tzinfo=None
+    )
+
+
+def utc_to_msc(utc_data: str):
+    msc_zone = pytz.timezone("Europe/Moscow")
+    msc_time = utc_data.astimezone(msc_zone)
+    return msc_time
+
+
+def calc_coeff(price):
+    if price > 0:
+        return round(price / 100 + 1, 3)
+    return round(abs(100 / price) + 1, 3)
+
+
+def to_dict_for_insert(obj, extra_fields=None):
+    data = {}
+    for col in obj.__table__.columns:
+        value = getattr(obj, col.name)
+        if isinstance(value, datetime.datetime):
+            if value.tzinfo is None:
+                value = value.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+        data[col.name] = value
+    if extra_fields:
+        data.update(extra_fields)
+    return data

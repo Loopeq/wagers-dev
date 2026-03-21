@@ -5,11 +5,9 @@ from asyncio import TimeoutError
 
 from aiohttp import TCPConnector
 
-from src.parser.utils.proxy import ProxyManager
+from src.services.proxy_service import ProxyService
 
-pm = ProxyManager()
 max_retries = 10
-
 
 @dataclass
 class Response:
@@ -30,7 +28,7 @@ async def get_request(
         for _ in range(max_retries):
             proxy = None
             if use_proxy:
-                proxy = pm.proxy
+                proxy = ProxyService.get_proxy()
             try:
                 async with session.get(
                     url, headers=headers, params=params, proxy=proxy, timeout=5

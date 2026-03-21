@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.logger import get_module_logger
 from src.core.models import League, Match, Team
 from src.parser.client.heads import get_heads
-from src.parser.utils.common import iso_to_utc
+from src.core.utils import iso_to_utc
 from src.repositories.match_repository import MatchRepository
 
 logger = get_module_logger(__name__)
@@ -143,7 +143,7 @@ class ParserHeadService:
             )
             return match
 
-        await MatchRepository.create_with_relations(
+        await MatchRepository.add_match_cascade(
             league=league,
             match=match,
             team_home=team_home,
