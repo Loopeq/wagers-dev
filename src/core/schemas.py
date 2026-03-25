@@ -46,7 +46,7 @@ class BetAddDTO(BaseModel):
     home_cf: float
     draw_cf: float | None = None
     away_cf: float
-    max_limit: int
+    limit: int
     type: str
     period: int
     key: str

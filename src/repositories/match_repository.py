@@ -2,10 +2,11 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import asc, case, delete, desc, distinct, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import aliased
 
 from src.core.models import League, Match, MatchMember, Team, MatchResult, Bet
-from src.core.schemas import MatchUpcomingDTO
+from src.core.utils import to_dict_for_insert
 
 
 class MatchRepository:
@@ -367,27 +368,58 @@ class MatchRepository:
         team_away: Team,
         session: AsyncSession,
     ) -> Match:
-        existing_league = await session.get(League, league.id)
-        if not existing_league:
-            session.add(league)
+        try:
 
-        session.add(team_home)
-        session.add(team_away)
-        await session.flush()
-
-        session.add(match)
-        await session.flush()
-
-        session.add(
-            MatchMember(
-                match_id=match.id,
-                home_id=team_home.id,
-                away_id=team_away.id,
+            await session.execute(
+                insert(League)
+                .values(id=league.id, sport_id=league.sport_id, name=league.name)
+                .on_conflict_do_nothing()
             )
-        )
+            await session.execute(
+                insert(Match)
+                .values(
+                    id=match.id,
+                    parent_id=match.parent_id,
+                    league_id=match.league_id,
+                    start_time=match.start_time,
+                )
+                .on_conflict_do_nothing()
+            )
+            home_id = await session.execute(
+                insert(Team)
+                .values(name=team_home.name, league_id=league.id)
+                .on_conflict_do_update(
+                    index_elements=["name", "league_id"],
+                    set_={"name": team_home.name},
+                )
+                .returning(Team.id)
+            )
+            home_id = home_id.scalar()
 
-        await session.commit()
-        return match
+            away_id = await session.execute(
+                insert(Team)
+                .values(name=team_away.name, league_id=league.id)
+                .on_conflict_do_update(
+                    index_elements=["name", "league_id"],
+                    set_={"name": team_away.name},
+                )
+                .returning(Team.id)
+            )
+            away_id = away_id.scalar()
+            if home_id and away_id:
+                await session.execute(
+                    insert(MatchMember)
+                    .values(
+                        match_id=match.id,
+                        home_id=home_id,
+                        away_id=away_id,
+                    )
+                    .on_conflict_do_nothing()
+                )
+        except Exception:
+            await session.rollback()
+            raise
+
     
     @staticmethod
     async def get_matches_older_than(

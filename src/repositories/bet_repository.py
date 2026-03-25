@@ -1,7 +1,7 @@
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
-
+from typing import Literal
 from src.core.models import Bet
 from src.core.schemas import BetAddDTO
 
@@ -46,7 +46,6 @@ class BetRepository:
 
         result = await session.execute(stmt)
         bets = result.scalars().all()
-
         return [
             {
                 key: value
@@ -139,19 +138,62 @@ class BetRepository:
         return {"comparison": comparison}
 
     @staticmethod
-    async def insert_bets_points(
+    async def insert_bets(
         bets: list[BetAddDTO],
         session: AsyncSession,
+        mode: Literal["coeffs", "points"],
     ) -> None:
         if not bets:
             return
 
-        session.add_all(
-            [
-                Bet(
+        match_ids = list({bet.match_id for bet in bets})
+
+        latest_subq = (
+            select(
+                Bet.match_id.label("match_id"),
+                Bet.type.label("type"),
+                Bet.period.label("period"),
+                Bet.key.label("key"),
+                func.max(Bet.version).label("max_version"),
+            )
+            .where(Bet.match_id.in_(match_ids))
+            .group_by(Bet.match_id, Bet.type, Bet.period, Bet.key)
+            .subquery()
+        )
+
+        stmt = (
+            select(Bet)
+            .join(
+                latest_subq,
+                and_(
+                    Bet.match_id == latest_subq.c.match_id,
+                    Bet.type == latest_subq.c.type,
+                    Bet.period == latest_subq.c.period,
+                    Bet.key == latest_subq.c.key,
+                    Bet.version == latest_subq.c.max_version,
+                ),
+            )
+        )
+
+        result = await session.execute(stmt)
+        latest_rows = result.scalars().all()
+
+        latest_map: dict[tuple[int, str, int, str], Bet] = {
+            (row.match_id, row.type, row.period, row.key): row
+            for row in latest_rows
+        }
+
+        new_rows: list[Bet] = []
+
+        for bet in bets:
+            row_key = (bet.match_id, bet.type, bet.period, bet.key)
+            latest = latest_map.get(row_key)
+
+            if latest is None:
+                new_row = Bet(
                     match_id=bet.match_id,
                     point=bet.point,
-                    max_limit=bet.max_limit,
+                    limit=bet.limit,
                     home_cf=bet.home_cf,
                     draw_cf=bet.draw_cf,
                     away_cf=bet.away_cf,
@@ -159,35 +201,64 @@ class BetRepository:
                     period=bet.period,
                     key=bet.key,
                     created_at=bet.created_at,
+                    version=0,
                 )
-                for bet in bets
-            ]
-        )
-        await session.commit()
+                new_rows.append(new_row)
+                latest_map[row_key] = new_row
+                continue
+
+            if BetRepository._has_significant_change(latest=latest, new=bet, mode=mode):
+                new_row = Bet(
+                    match_id=bet.match_id,
+                    point=bet.point,
+                    limit=bet.limit,
+                    home_cf=bet.home_cf,
+                    draw_cf=bet.draw_cf,
+                    away_cf=bet.away_cf,
+                    type=bet.type,
+                    period=bet.period,
+                    key=bet.key,
+                    created_at=bet.created_at,
+                    version=latest.version + 1,
+                )
+                new_rows.append(new_row)
+                latest_map[row_key] = new_row
+
+        if new_rows:
+            session.add_all(new_rows)
 
     @staticmethod
-    async def insert_bets_coeffs(
-        bets: list[BetAddDTO],
-        session: AsyncSession,
-    ) -> None:
-        if not bets:
-            return
+    def _has_significant_change(
+        latest: Bet,
+        new: BetAddDTO,
+        mode: Literal["coeffs", "points"],
+    ) -> bool:
+        if mode == "points":
+            return BetRepository._point_changed(latest.point, new.point, threshold=0.5)
 
-        session.add_all(
-            [
-                Bet(
-                    match_id=bet.match_id,
-                    point=bet.point,
-                    max_limit=bet.max_limit,
-                    home_cf=bet.home_cf,
-                    draw_cf=bet.draw_cf,
-                    away_cf=bet.away_cf,
-                    type=bet.type,
-                    period=bet.period,
-                    key=bet.key,
-                    created_at=bet.created_at,
-                )
-                for bet in bets
-            ]
-        )
-        await session.commit()
+        if mode == "coeffs":
+            return any(
+                [
+                    BetRepository._num_changed(latest.home_cf, new.home_cf, threshold=0.10),
+                    BetRepository._num_changed(latest.draw_cf, new.draw_cf, threshold=0.10),
+                    BetRepository._num_changed(latest.away_cf, new.away_cf, threshold=0.10),
+                ]
+            )
+
+        return False
+
+    @staticmethod
+    def _point_changed(old: float | int | None, new: float | int | None, threshold: float) -> bool:
+        if old is None and new is None:
+            return False
+        if old is None or new is None:
+            return True
+        return abs(float(old) - float(new)) >= threshold
+
+    @staticmethod
+    def _num_changed(old: float | int | None, new: float | int | None, threshold: float) -> bool:
+        if old is None and new is None:
+            return False
+        if old is None or new is None:
+            return True
+        return abs(float(old) - float(new)) >= threshold

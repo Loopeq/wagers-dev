@@ -48,7 +48,10 @@ class StraightBuilder:
                 }
             )
 
-        return group_bets(mapped), list(periods.values())
+
+        grouped = group_bets(mapped)
+
+        return grouped, list(periods.values())
 
     def map_comparison(self, comparison: dict):
         result = []

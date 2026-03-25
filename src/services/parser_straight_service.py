@@ -12,6 +12,7 @@ from src.parser.config import sports, sports_ids
 from src.core.utils import calc_coeff
 from src.repositories.bet_repository import BetRepository
 from src.scripts.bet_clusters import extract_latest, is_int_or_half
+from src.core.db.db_helper import db_helper
 
 logger = get_module_logger(__name__)
 
@@ -24,12 +25,11 @@ class ParserStraightService:
     async def collect_content(
         cls,
         matches: Iterable[MatchUpcomingDTO],
-        session: AsyncSession,
     ) -> None:
         response_date = datetime.utcnow()
 
         tasks = [
-            cls.process_match(match=match, response_date=response_date, session=session)
+            cls.process_match(match=match, response_date=response_date)
             for match in matches
             if match.sport_id in {
                 sports["basketball"],
@@ -46,29 +46,31 @@ class ParserStraightService:
         cls,
         match: MatchUpcomingDTO,
         response_date: datetime,
-        session: AsyncSession,
     ) -> None:
-        bets = await cls.extract_bet_content(
-            match=match,
-            response_date=response_date,
-            session=session,
-        )
+        async with db_helper.session_factory() as session:
+            async with session.begin():
+                bets = await cls.extract_bet_content(
+                    match=match,
+                    response_date=response_date,
+                    session=session,
+                )
 
-        if not bets:
-            return
+                if not bets:
+                    return
 
-        if match.sport_id == sports["basketball"]:
-            await BetRepository.insert_bets_points(
-                bets=bets,
-                match_id=match.id,
-                session=session,
-            )
-            return
+                if match.sport_id == sports["basketball"]:
+                    await BetRepository.insert_bets(
+                        session=session,
+                        bets=bets,
+                        mode='points'
+                    )
+                    return
 
-        await BetRepository.insert_bets_coeffs(
-            bets=bets,
-            session=session,
-        )
+                await BetRepository.insert_bets(
+                    bets=bets,
+                    session=session,
+                    mode='coeffs'
+                )
 
     @classmethod
     async def extract_bet_content(
@@ -154,7 +156,7 @@ class ParserStraightService:
         return BetAddDTO(
             match_id=match.id,
             point=point,
-            max_limit=limit_max,
+            limit=limit_max,
             home_cf=home_price,
             draw_cf=draw_price,
             away_cf=away_price,
