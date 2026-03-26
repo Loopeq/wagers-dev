@@ -11,6 +11,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      seed:
+        condition: service_completed_successfully
     volumes:
       - ./src:/code/src
       - .env:/code/.env
@@ -42,7 +44,7 @@ services:
     networks:
       - web
 
-  initial_script:
+  seed:
      build:
        context: .
        dockerfile: Dockerfile
@@ -51,9 +53,7 @@ services:
      depends_on:
        db:
          condition: service_healthy
-       web:
-         condition: service_started
-     command: python -m src.scripts.init_script
+     command: python -m src.scripts.seed
      volumes:
        - ./src:/code/src
      environment:

@@ -16,9 +16,7 @@ def lifespan_factory():
 
 def create_application(router: APIRouter, **kwargs: Any) -> FastAPI:
     origins = [
-        "https://www.swaeger.com",
-        "https://swaeger.com",
-        "https://spredly.ru",
+        settings.ORIGIN_DOMAIN,
     ]
     if settings.DEV == "1":
         for port in range(8010, 8200):

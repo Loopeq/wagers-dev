@@ -6,9 +6,11 @@ from src.core.db.db_helper import db_helper
 from src.core.models import User
 from src.settings import settings
 from src.core.utils import get_password_hash
+from src.repositories.sport_repository import SportRepository
+from src.parser.config import sports, sports_ru
 
 
-async def create_first_superuser(session: AsyncSession):
+async def seed_first_superuser(session: AsyncSession):
     EMAIL = settings.FIRST_USER_EMAIL
     PASSWORD = get_password_hash(settings.FIRST_USER_PASSWORD)
 
@@ -23,13 +25,22 @@ async def create_first_superuser(session: AsyncSession):
             superuser=True,
         )
         session.add(admin_user)
-        await session.commit()
 
+async def seed_sports(session: AsyncSession):
+    await SportRepository.create_sports(
+        session=session,
+        sports=sports,
+        sports_ru=sports_ru,
+    )
 
-async def main():
+async def run():
     async with db_helper.session_factory() as session:
-        await create_first_superuser(session)
+        async with session.begin():
+            await seed_first_superuser(session)
+            await seed_sports()
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+
+if __name__ == '__main__':
+    asyncio.run(run())
+    

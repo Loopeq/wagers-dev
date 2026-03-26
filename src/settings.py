@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     REDIS_PORT: str = os.environ.get("REDIS_PORT")
     REDIS_PASSWORD: str = os.environ.get("REDIS_PASSWORD")
 
+    # origin 
+    ORIGIN_DOMAIN: str = os.environ.get("ORIGIN_DOMAIN")
+
     @property
     def DATABASE_URL(self):
         return (
