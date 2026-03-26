@@ -1,8 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
-import math
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
-from curl_cffi import AsyncSession
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy import desc, func, select
