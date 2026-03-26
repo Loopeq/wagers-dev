@@ -7,7 +7,7 @@ from src.core.models import User
 from src.settings import settings
 from src.core.utils import get_password_hash
 from src.repositories.sport_repository import SportRepository
-from src.parser.config import sports, sports_ru
+from src.parser.config import sports
 
 
 async def seed_first_superuser(session: AsyncSession):
@@ -30,7 +30,6 @@ async def seed_sports(session: AsyncSession):
     await SportRepository.create_sports(
         session=session,
         sports=sports,
-        sports_ru=sports_ru,
     )
 
 async def run():
