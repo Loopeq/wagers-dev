@@ -36,8 +36,8 @@ async def seed_sports(session: AsyncSession):
 async def run():
     async with db_helper.session_factory() as session:
         async with session.begin():
-            await seed_first_superuser(session)
-            await seed_sports()
+            await seed_first_superuser(session=session)
+            await seed_sports(session=session)
 
 
 
