@@ -15,8 +15,8 @@ class WorkerSettings:
     functions = [startup, get_heads, get_straight, archive_matches]
 
     cron_jobs = [
-        cron(get_heads, minute=list(range(0, 60, 3)), max_tries=5),
-        cron(get_straight, minute=list(range(0, 60, 3)), max_tries=5),
+        cron(get_heads, minute=list(range(0, 60, 1)), max_tries=5),
+        cron(get_straight, minute=list(range(0, 60, 1)), max_tries=5),
         cron(archive_matches, hour=2, minute=0, max_tries=5),
     ]
 

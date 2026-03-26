@@ -369,7 +369,6 @@ class MatchRepository:
         session: AsyncSession,
     ) -> Match:
         try:
-
             await session.execute(
                 insert(League)
                 .values(id=league.id, sport_id=league.sport_id, name=league.name)

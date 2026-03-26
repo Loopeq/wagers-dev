@@ -9,6 +9,7 @@ from src.core.models import League, Match, Team
 from src.parser.client.heads import get_heads
 from src.core.utils import iso_to_utc
 from src.repositories.match_repository import MatchRepository
+from src.core.db.db_helper import db_helper
 
 logger = get_module_logger(__name__)
 
@@ -142,7 +143,6 @@ class ParserHeadService:
                 session=session,
             )
             return match
-
         await MatchRepository.add_match_cascade(
             league=league,
             match=match,
@@ -178,15 +178,16 @@ class ParserHeadService:
         for event in sorted_events:
             match_id = event["id"]
             try:
-                match = await cls._process_event(
-                    event=event,
-                    existing_ids=existing_ids,
-                    session=session,
-                )
-                results.append(match)
+                async with db_helper.session_factory() as session:
+                    async with session.begin():
+                        match = await cls._process_event(
+                            event=event,
+                            existing_ids=existing_ids,
+                            session=session,
+                        )
+                        results.append(match)
             except Exception as exc:
                 logger.error(f"Process match error {match_id}: {exc}")
-
         return results
 
     @classmethod
