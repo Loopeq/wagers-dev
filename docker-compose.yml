@@ -14,7 +14,6 @@ services:
     volumes:
       - ./src:/code/src
       - .env:/code/.env
-      - ./logs:/code/logs
       - ./storage:/code/storage
       - ./migrations:/code/migrations
     environment:
