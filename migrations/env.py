@@ -1,12 +1,11 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
-from src.settings import settings
-from src.core.models import Match  # noqa
+from sqlalchemy import engine_from_config, pool
+
 from src.core.db.base import Base
+from src.core.models import Match  # noqa
+from src.settings import settings
 
 config = context.config
 

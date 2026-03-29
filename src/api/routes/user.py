@@ -1,13 +1,13 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Annotated
 
-from src.core.db.db_helper import db_helper
 from src.api.dependencies import CURRENT_ACTIVE_USER
+from src.core.db.db_helper import db_helper
 from src.core.schemas import RegisterForm, UserOut
 from src.services.user_service import UserService
-
 
 router = APIRouter(prefix="/user", tags=["User"])
 

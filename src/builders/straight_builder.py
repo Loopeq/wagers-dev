@@ -48,7 +48,6 @@ class StraightBuilder:
                 }
             )
 
-
         grouped = group_bets(mapped)
 
         return grouped, list(periods.values())

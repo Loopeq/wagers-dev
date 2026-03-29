@@ -1,6 +1,5 @@
-from src.parser.client.base import get_request
 from src.core.logger import get_module_logger
-import asyncio
+from src.parser.client.base import get_request
 
 HEADERS = {
     "sec-ch-ua": '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',

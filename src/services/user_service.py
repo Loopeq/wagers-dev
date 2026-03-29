@@ -1,16 +1,14 @@
-from datetime import timedelta
 import uuid
+from datetime import timedelta
+
 from fastapi import HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from src.core.security import (
-    authenticate_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-    create_access_token,
-)
-from src.core.utils import get_password_hash
 from src.core.schemas import RegisterForm
+from src.core.security import (ACCESS_TOKEN_EXPIRE_MINUTES, authenticate_user,
+                               create_access_token)
+from src.core.utils import get_password_hash
 from src.repositories.invite_repository import InviteRepository
 from src.repositories.user_repository import UserRepository
 

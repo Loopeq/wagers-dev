@@ -1,15 +1,13 @@
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.logger import get_module_logger
-from src.core.models import (
-    MatchArchive,
-    MatchMemberArchive,
-    MatchResultArchive,
-    BetArchive,
-)
+from src.core.models import (BetArchive, MatchArchive, MatchMemberArchive,
+                             MatchResultArchive)
 from src.core.utils import to_dict_for_insert
 
 logger = get_module_logger(__name__)
+
 
 class ArchiveRepository:
 
@@ -17,7 +15,7 @@ class ArchiveRepository:
     async def _bulk_insert(session: AsyncSession, model, objects: list) -> None:
         if not objects:
             return
-            
+
         BATCH_SIZE = 1000
         for i in range(0, len(objects), BATCH_SIZE):
             chunk = objects[i : i + BATCH_SIZE]
@@ -28,7 +26,7 @@ class ArchiveRepository:
                     .on_conflict_do_nothing()
                 )
             except:
-                logger.error('Exception while archive events')
+                logger.error("Exception while archive events")
 
     @staticmethod
     async def archive_matches(matches: list, session: AsyncSession) -> None:

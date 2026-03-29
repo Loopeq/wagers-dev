@@ -4,15 +4,14 @@ from typing import Iterable
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.db.db_helper import db_helper
 from src.core.logger import get_module_logger
 from src.core.schemas import BetAddDTO, MatchUpcomingDTO
-from src.core.utils import format_key
+from src.core.utils import calc_coeff, format_key
 from src.parser.client.straight import get_straight
 from src.parser.config import sports, sports_ids
-from src.core.utils import calc_coeff
 from src.repositories.bet_repository import BetRepository
 from src.scripts.bet_clusters import extract_latest, is_int_or_half
-from src.core.db.db_helper import db_helper
 
 logger = get_module_logger(__name__)
 
@@ -31,7 +30,8 @@ class ParserStraightService:
         tasks = [
             cls.process_match(match=match, response_date=response_date)
             for match in matches
-            if match.sport_id in {
+            if match.sport_id
+            in {
                 sports["basketball"],
                 sports["tennis"],
                 sports["football"],
@@ -60,16 +60,12 @@ class ParserStraightService:
 
                 if match.sport_id == sports["basketball"]:
                     await BetRepository.insert_bets(
-                        session=session,
-                        bets=bets,
-                        mode='points'
+                        session=session, bets=bets, mode="points"
                     )
                     return
 
                 await BetRepository.insert_bets(
-                    bets=bets,
-                    session=session,
-                    mode='coeffs'
+                    bets=bets, session=session, mode="coeffs"
                 )
 
     @classmethod
@@ -189,7 +185,11 @@ class ParserStraightService:
     ) -> bool:
         sport_name = sports_ids.get(match.sport_id)
 
-        if sport_name == "tennis" and match.parent_id and key not in cls.TENNIS_CHILD_ALLOWED_KEYS:
+        if (
+            sport_name == "tennis"
+            and match.parent_id
+            and key not in cls.TENNIS_CHILD_ALLOWED_KEYS
+        ):
             return False
 
         if sport_name in cls.POINT_FILTER_SPORTS:

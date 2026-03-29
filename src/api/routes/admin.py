@@ -1,12 +1,12 @@
 from typing import Annotated, List
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.db.db_helper import db_helper
 from src.api.dependencies import CURRENT_ADMIN_USER
+from src.core.db.db_helper import db_helper
 from src.core.schemas import InviteCode, UserOutAdmin
 from src.services.admin_service import AdminService
-
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 

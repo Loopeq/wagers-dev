@@ -1,10 +1,12 @@
+import datetime
+import secrets
+from datetime import datetime, timedelta
+
+import pytz
 from passlib.context import CryptContext
+
 from src.core.constants import PERIODS
 from src.parser.config import sports_ids
-from datetime import timedelta, datetime
-import secrets
-import datetime
-import pytz
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -40,11 +42,11 @@ def generate_invite_code(length: int = 12):
 
 
 def iso_to_utc(iso_str: str):
-    return datetime.datetime.fromisoformat(iso_str.replace("Z", ""))
+    return datetime.fromisoformat(iso_str.replace("Z", ""))
 
 
 def gmt_to_utc(gmt_str: str):
-    return datetime.datetime.strptime(gmt_str, "%a, %d %b %Y %H:%M:%S GMT").replace(
+    return datetime.strptime(gmt_str, "%a, %d %b %Y %H:%M:%S GMT").replace(
         tzinfo=None
     )
 
@@ -65,7 +67,7 @@ def to_dict_for_insert(obj, extra_fields=None):
     data = {}
     for col in obj.__table__.columns:
         value = getattr(obj, col.name)
-        if isinstance(value, datetime.datetime):
+        if isinstance(value, datetime):
             if value.tzinfo is None:
                 value = value.astimezone(datetime.timezone.utc).replace(tzinfo=None)
         data[col.name] = value

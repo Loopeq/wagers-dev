@@ -1,4 +1,5 @@
 from collections import defaultdict
+
 from src.core.models import Bet
 from src.core.schemas import BetAddDTO
 

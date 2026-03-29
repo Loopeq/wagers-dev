@@ -1,16 +1,17 @@
-from datetime import datetime
+import asyncio
 import json
-from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime
 from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy import desc, func, select
-from src.core.db.db_helper import db_helper
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.api.dependencies import CURRENT_ACTIVE_USER
+from src.core.db.db_helper import db_helper
 from src.core.models import League, Match, Sport
 from src.core.schemas import SportDTO
-import asyncio
-
 from src.services.related_service import RelatedService
 from src.services.straight_service import StraightService
 

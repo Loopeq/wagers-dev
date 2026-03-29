@@ -2,9 +2,9 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.repositories.match_repository import MatchRepository
-from src.repositories.bet_repository import BetRepository
 from src.repositories.archive_repository import ArchiveRepository
+from src.repositories.bet_repository import BetRepository
+from src.repositories.match_repository import MatchRepository
 
 
 class ParserArchiveService:

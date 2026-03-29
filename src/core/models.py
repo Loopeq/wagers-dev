@@ -2,16 +2,10 @@ import datetime
 import enum
 from typing import Annotated
 
-from sqlalchemy import (
-    Boolean,
-    ForeignKey,
-    Index,
-    text,
-    UniqueConstraint,
-)
-from src.core.db.base import Base, str_128, str_64
+from sqlalchemy import Boolean, ForeignKey, Index, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from src.core.db.base import Base, str_64, str_128
 
 intpk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
 created_at = Annotated[

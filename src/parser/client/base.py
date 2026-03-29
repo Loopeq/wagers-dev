@@ -1,13 +1,14 @@
+from asyncio import TimeoutError
 from dataclasses import dataclass
 from typing import Any, Optional
-import aiohttp
-from asyncio import TimeoutError
 
+import aiohttp
 from aiohttp import TCPConnector
 
 from src.services.proxy_service import ProxyService
 
 max_retries = 10
+
 
 @dataclass
 class Response:

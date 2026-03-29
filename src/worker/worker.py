@@ -1,7 +1,8 @@
 from arq import cron
 from arq.connections import RedisSettings
-from src.worker.tasks import startup, get_heads, get_straight, archive_matches
+
 from src.settings import settings
+from src.worker.tasks import archive_matches, get_heads, get_straight, startup
 
 
 class WorkerSettings:

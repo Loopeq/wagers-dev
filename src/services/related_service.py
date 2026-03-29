@@ -60,7 +60,7 @@ class RelatedService:
                 "limit": limit,
             },
         }
-    
+
     @staticmethod
     async def get_history(
         session: AsyncSession,

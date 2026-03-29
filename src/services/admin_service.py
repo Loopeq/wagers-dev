@@ -2,10 +2,10 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from src.repositories.invite_repository import InviteRepository
-from src.repositories.user_repository import UserRepository
 from src.core.models import InviteCode
 from src.core.utils import generate_invite_code
+from src.repositories.invite_repository import InviteRepository
+from src.repositories.user_repository import UserRepository
 
 
 class AdminService:

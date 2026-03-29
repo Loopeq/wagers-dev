@@ -1,7 +1,7 @@
-from pydantic_settings import BaseSettings
-from dotenv import load_dotenv
 import os
 
+from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
 
 load_dotenv()
 
@@ -36,7 +36,13 @@ class Settings(BaseSettings):
     REDIS_PORT: str = os.environ.get("REDIS_PORT")
     REDIS_PASSWORD: str = os.environ.get("REDIS_PASSWORD")
 
-    # origin 
+    # rabbitmq
+    RABBIT_HOST: str = os.environ.get("RABBITMQ_HOST")
+    RABBIT_PORT: int = os.environ.get("RABBITMQ_PORT")
+    RABBIT_USER: str = os.environ.get("RABBITMQ_USER")
+    RABBIT_PASSWORD: str = os.environ.get("RABBITMQ_PASS")
+
+    # origin
     ORIGIN_DOMAIN: str = os.environ.get("ORIGIN_DOMAIN")
 
     @property

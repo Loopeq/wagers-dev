@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from typing import Any
-from fastapi import FastAPI, APIRouter
+
+from fastapi import APIRouter, FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from src.settings import settings

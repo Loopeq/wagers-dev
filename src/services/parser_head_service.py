@@ -4,12 +4,12 @@ from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.db.db_helper import db_helper
 from src.core.logger import get_module_logger
 from src.core.models import League, Match, Team
-from src.parser.client.heads import get_heads
 from src.core.utils import iso_to_utc
+from src.parser.client.heads import get_heads
 from src.repositories.match_repository import MatchRepository
-from src.core.db.db_helper import db_helper
 
 logger = get_module_logger(__name__)
 

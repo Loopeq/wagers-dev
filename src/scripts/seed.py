@@ -1,13 +1,14 @@
 import asyncio
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.db.db_helper import db_helper
 from src.core.models import User
-from src.settings import settings
 from src.core.utils import get_password_hash
-from src.repositories.sport_repository import SportRepository
 from src.parser.config import sports
+from src.repositories.sport_repository import SportRepository
+from src.settings import settings
 
 
 async def seed_first_superuser(session: AsyncSession):
@@ -26,11 +27,13 @@ async def seed_first_superuser(session: AsyncSession):
         )
         session.add(admin_user)
 
+
 async def seed_sports(session: AsyncSession):
     await SportRepository.create_sports(
         session=session,
         sports=sports,
     )
+
 
 async def run():
     async with db_helper.session_factory() as session:
@@ -39,7 +42,5 @@ async def run():
             await seed_sports(session=session)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(run())
-    

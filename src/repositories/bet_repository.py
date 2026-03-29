@@ -1,7 +1,9 @@
+from typing import Literal
+
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
-from typing import Literal
+
 from src.core.models import Bet
 from src.core.schemas import BetAddDTO
 
@@ -10,9 +12,7 @@ class BetRepository:
     @staticmethod
     async def get_event_bets(match_id: int, session: AsyncSession):
         stmt = (
-            select(Bet)
-            .where(Bet.match_id == match_id)
-            .order_by(Bet.created_at.desc())
+            select(Bet).where(Bet.match_id == match_id).order_by(Bet.created_at.desc())
         )
         result = await session.execute(stmt)
         return result.scalars().all()
@@ -28,14 +28,16 @@ class BetRepository:
         stmt = select(Bet).where(Bet.match_id.in_(match_ids))
         result = await session.execute(stmt)
         return result.scalars().all()
-    
+
     @staticmethod
     async def get_changes(
         match_ids: list[int | None],
         periods: list | None,
         session: AsyncSession,
     ) -> list[dict]:
-        filtered_match_ids = [match_id for match_id in match_ids if match_id is not None]
+        filtered_match_ids = [
+            match_id for match_id in match_ids if match_id is not None
+        ]
 
         stmt = select(Bet).where(Bet.match_id.in_(filtered_match_ids))
 
@@ -161,26 +163,22 @@ class BetRepository:
             .subquery()
         )
 
-        stmt = (
-            select(Bet)
-            .join(
-                latest_subq,
-                and_(
-                    Bet.match_id == latest_subq.c.match_id,
-                    Bet.type == latest_subq.c.type,
-                    Bet.period == latest_subq.c.period,
-                    Bet.key == latest_subq.c.key,
-                    Bet.version == latest_subq.c.max_version,
-                ),
-            )
+        stmt = select(Bet).join(
+            latest_subq,
+            and_(
+                Bet.match_id == latest_subq.c.match_id,
+                Bet.type == latest_subq.c.type,
+                Bet.period == latest_subq.c.period,
+                Bet.key == latest_subq.c.key,
+                Bet.version == latest_subq.c.max_version,
+            ),
         )
 
         result = await session.execute(stmt)
         latest_rows = result.scalars().all()
 
         latest_map: dict[tuple[int, str, int, str], Bet] = {
-            (row.match_id, row.type, row.period, row.key): row
-            for row in latest_rows
+            (row.match_id, row.type, row.period, row.key): row for row in latest_rows
         }
 
         new_rows: list[Bet] = []
@@ -239,16 +237,24 @@ class BetRepository:
         if mode == "coeffs":
             return any(
                 [
-                    BetRepository._num_changed(latest.home_cf, new.home_cf, threshold=0.10),
-                    BetRepository._num_changed(latest.draw_cf, new.draw_cf, threshold=0.10),
-                    BetRepository._num_changed(latest.away_cf, new.away_cf, threshold=0.10),
+                    BetRepository._num_changed(
+                        latest.home_cf, new.home_cf, threshold=0.10
+                    ),
+                    BetRepository._num_changed(
+                        latest.draw_cf, new.draw_cf, threshold=0.10
+                    ),
+                    BetRepository._num_changed(
+                        latest.away_cf, new.away_cf, threshold=0.10
+                    ),
                 ]
             )
 
         return False
 
     @staticmethod
-    def _point_changed(old: float | int | None, new: float | int | None, threshold: float) -> bool:
+    def _point_changed(
+        old: float | int | None, new: float | int | None, threshold: float
+    ) -> bool:
         if old is None and new is None:
             return False
         if old is None or new is None:
@@ -256,7 +262,9 @@ class BetRepository:
         return abs(float(old) - float(new)) >= threshold
 
     @staticmethod
-    def _num_changed(old: float | int | None, new: float | int | None, threshold: float) -> bool:
+    def _num_changed(
+        old: float | int | None, new: float | int | None, threshold: float
+    ) -> bool:
         if old is None and new is None:
             return False
         if old is None or new is None:

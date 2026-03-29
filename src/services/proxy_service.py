@@ -7,7 +7,6 @@ import requests
 
 from src.settings import settings as conf
 
-
 logger = logging.getLogger(__name__)
 
 

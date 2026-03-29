@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.models import Sport
 
+
 class SportRepository:
 
     @staticmethod
@@ -20,7 +21,5 @@ class SportRepository:
             )
 
         await session.execute(
-            insert(Sport)
-            .values(values)
-            .on_conflict_do_nothing(index_elements=["id"])
+            insert(Sport).values(values).on_conflict_do_nothing(index_elements=["id"])
         )

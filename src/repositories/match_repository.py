@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 
-from sqlalchemy import asc, case, delete, desc, distinct, func, or_, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import (asc, case, delete, desc, distinct, func, or_, select,
+                        update)
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from src.core.models import League, Match, MatchMember, Team, MatchResult, Bet
+from src.core.models import Bet, League, Match, MatchMember, MatchResult, Team
 from src.core.utils import to_dict_for_insert
 
 
@@ -20,15 +21,14 @@ class MatchRepository:
         )
         result = await session.execute(stmt)
         rows = result.all()
-        
+
         matches = []
 
         for match, sport_id in rows:
             match.sport_id = sport_id
             matches.append(match)
-        
-        return matches
 
+        return matches
 
     @staticmethod
     async def get_match_with_teams(match_id: int, session: AsyncSession) -> dict | None:
@@ -333,7 +333,7 @@ class MatchRepository:
 
         result = await session.execute(count_stmt)
         return result.scalar_one()
-    
+
     @staticmethod
     async def get_existing_ids(
         match_ids: list[int],
@@ -353,9 +353,7 @@ class MatchRepository:
         session: AsyncSession,
     ) -> None:
         stmt = (
-            update(Match)
-            .where(Match.id == match_id)
-            .values(start_time=new_start_time)
+            update(Match).where(Match.id == match_id).values(start_time=new_start_time)
         )
         await session.execute(stmt)
         await session.commit()
@@ -419,7 +417,6 @@ class MatchRepository:
             await session.rollback()
             raise
 
-    
     @staticmethod
     async def get_matches_older_than(
         threshold_time: datetime,
